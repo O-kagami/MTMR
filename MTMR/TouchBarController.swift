@@ -35,6 +35,8 @@ extension ItemType {
             return "com.toxblh.mtmr.dock"
         case .volume:
             return "com.toxblh.mtmr.volume"
+        case .localLevel:
+            return "com.toxblh.mtmr.localLevel"
         case .brightness(refreshInterval: _):
             return "com.toxblh.mtmr.brightness"
         case .weather(interval: _, units: _, api_key: _, icon_type: _):
@@ -358,6 +360,8 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
             } else {
                 barItem = VolumeViewController(identifier: identifier)
             }
+        case .localLevel:
+            barItem = LocalLevelTouchBarItem(identifier: identifier)
         case let .brightness(refreshInterval: interval):
             if case let .image(source)? = item.additionalParameters[.image] {
                 barItem = BrightnessViewController(identifier: identifier, refreshInterval: interval, image: source.image)
@@ -579,5 +583,168 @@ extension BarItemDefinition {
             return result
         }
         return .center
+    }
+}
+
+// Experimental local mode switch: does not modify or reload the preset.
+private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
+    private let stack = NSStackView()
+    private let toggle = CustomButtonTouchBarItem(identifier: .init("local.level.toggle"), title: " ")
+    private let brightness = BrightnessViewController(identifier: .init("local.level.brightness"), refreshInterval: 0.5)
+    private let volume = VolumeViewController(identifier: .init("local.level.volume"))
+    private let label = NSTextField(labelWithString: "")
+    private var isVolume = false
+    private var timer: Timer?
+    private var loadingBrightness = false
+    private var checkingVolume = false
+    private var currentSymbol: String?
+
+    override init(identifier: NSTouchBarItem.Identifier) {
+        super.init(identifier: identifier)
+        stack.orientation = .horizontal
+        stack.wantsLayer = true
+        toggle.view.wantsLayer = true
+        stack.spacing = 8
+        stack.widthAnchor.constraint(equalToConstant: 174).isActive = true
+        view = stack
+        toggle.isBordered = false
+        toggle.setWidth(value: 36)
+        toggle.actions = [ItemAction(trigger: .singleTap, { [weak self] in self?.switchMode() })]
+        brightness.setWidth(value: 80)
+        let previousVolume = volume.sliderItem.floatValue
+        let sliderCell = LocalVolumeSliderCell()
+        volume.sliderItem.cell = sliderCell
+        volume.sliderItem.minValue = 0
+        volume.sliderItem.maxValue = 100
+        volume.sliderItem.floatValue = previousVolume
+        volume.sliderItem.target = self
+        volume.sliderItem.action = #selector(sliderMoved(_:))
+        volume.setWidth(value: 80)
+        label.alignment = .center
+        label.widthAnchor.constraint(equalToConstant: 42).isActive = true
+        render()
+        timer = Timer.scheduledTimer(withTimeInterval: 0.75, repeats: true) { [weak self] _ in self?.refresh() }
+        refresh()
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
+    deinit { timer?.invalidate() }
+    @objc private func sliderMoved(_ sender: NSSlider) {
+        volume.sliderValueChanged(sender)
+        let level = Int(sender.floatValue)
+        label.stringValue = "\(level)%"
+        updateIcon(level: level)
+    }
+    private func switchMode() {
+        TouchBarMotion.fade(stack, key: "localLevelMode")
+        if !isVolume { brightness.cancelAdjustment() }
+        isVolume.toggle()
+        render()
+        refresh()
+    }
+    private func render() {
+        for child in stack.arrangedSubviews { stack.removeArrangedSubview(child); child.removeFromSuperview() }
+        updateIcon(level: nil)
+        stack.addArrangedSubview(toggle.view)
+        if isVolume { stack.addArrangedSubview(volume.view) }
+        else { stack.addArrangedSubview(brightness.view) }
+        stack.addArrangedSubview(label)
+    }
+    private func updateIcon(level: Int?) {
+        let symbol: String
+        if isVolume {
+            if let level = level {
+                if level == 0 { symbol = "speaker.slash.fill" }
+                else if level < 34 { symbol = "speaker.wave.1.fill" }
+                else if level < 67 { symbol = "speaker.wave.2.fill" }
+                else { symbol = "speaker.wave.3.fill" }
+            } else { symbol = "speaker.slash.fill" }
+        } else {
+            symbol = (level ?? 0) < 50 ? "sun.min.fill" : "sun.max.fill"
+        }
+        if symbol != currentSymbol {
+            TouchBarMotion.fade(toggle.view, key: "localLevelIcon")
+            currentSymbol = symbol
+        }
+        let icon = NSImage(systemSymbolName: symbol, accessibilityDescription: isVolume ? "音量" : "明るさ")
+        toggle.image = icon
+        if isVolume, let cell = volume.sliderItem.cell as? LocalVolumeSliderCell {
+            cell.icon = icon
+            volume.sliderItem.needsDisplay = true
+        }
+    }
+    private func refresh() {
+        if isVolume {
+            guard !checkingVolume else { return }
+            checkingVolume = true
+            DispatchQueue.global(qos: .utility).async { [weak self] in
+                let task = Process()
+                task.executableURL = URL(fileURLWithPath: appSupportDirectory + "/LevelControl/volume-capability/check")
+                let pipe = Pipe(); task.standardOutput = pipe; task.standardError = Pipe()
+                var status = "unknown"
+                if (try? task.run()) != nil {
+                    let bytes = pipe.fileHandleForReading.readDataToEndOfFile(); task.waitUntilExit()
+                    if task.terminationStatus == 0, let result = String(data: bytes, encoding: .utf8) { status = result.trimmingCharacters(in: .whitespacesAndNewlines) }
+                }
+                DispatchQueue.main.async { [weak self] in
+                    guard let self = self else { return }
+                    self.checkingVolume = false
+                    if status == "available" { self.volume.sliderItem.isEnabled = true }
+                    else if status == "unavailable" { self.volume.sliderItem.isEnabled = false }
+                    if self.isVolume {
+                        let level = self.volume.sliderItem.isEnabled ? Int(self.volume.sliderItem.floatValue) : nil
+                        self.label.stringValue = level.map { "\($0)%" } ?? "--"
+                        self.updateIcon(level: level)
+                    }
+                }
+            }
+            return
+        }
+        guard !loadingBrightness else { return }
+        loadingBrightness = true
+        DispatchQueue.global(qos: .utility).async { [weak self] in
+            let task = Process()
+            task.executableURL = URL(fileURLWithPath: appSupportDirectory + "/LevelControl/read-brightness")
+            let pipe = Pipe(); task.standardOutput = pipe; task.standardError = Pipe()
+            var value = "--"
+            if (try? task.run()) != nil {
+                let bytes = pipe.fileHandleForReading.readDataToEndOfFile(); task.waitUntilExit()
+                if task.terminationStatus == 0, let result = String(data: bytes, encoding: .utf8) { value = result.trimmingCharacters(in: .whitespacesAndNewlines) }
+            }
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.loadingBrightness = false
+                if !self.isVolume {
+                    self.label.stringValue = value
+                    let digits = value.filter { $0.isNumber }
+                    self.updateIcon(level: Int(digits))
+                }
+            }
+        }
+    }
+}
+
+// Clamp the custom icon's painted bounds to the bar at both endpoints.
+private final class LocalVolumeSliderCell: NSSliderCell {
+    var icon: NSImage?
+    private var bar = NSRect.zero
+    override func drawBar(inside rect: NSRect, flipped: Bool) {
+        bar = rect
+        super.drawBar(inside: rect, flipped: flipped)
+    }
+    override func drawKnob(_ rect: NSRect) {
+        guard let icon = icon, bar.width > 0 else { super.drawKnob(rect); return }
+        let width = min(CGFloat(16), bar.width)
+        let denominator = maxValue - minValue
+        let ratio = denominator > 0 ? max(0, min(1, (doubleValue - minValue) / denominator)) : 0
+        let x = bar.minX + (bar.width - width) * CGFloat(ratio)
+        let target = NSRect(x: x, y: bar.midY - width / 2, width: width, height: width)
+        // Tint in an isolated image so source-in cannot affect the track below.
+        let whiteIcon = NSImage(size: target.size, flipped: false) { bounds in
+            icon.draw(in: bounds, from: .zero, operation: .sourceOver, fraction: 1)
+            NSColor.white.setFill()
+            bounds.fill(using: .sourceIn)
+            return true
+        }
+        whiteIcon.draw(in: target, from: .zero, operation: .sourceOver, fraction: 1)
     }
 }

@@ -1,0 +1,11 @@
+# Local level control development
+
+This working tree builds on upstream MTMR commit `94fc98c` with a `localLevel` item that locally switches between brightness and volume sliders. It does not rewrite the preset on each switch. Both modes reserve the same width, so switching does not displace other items. The volume knob is drawn in white and the level icons vary by the observed level. Short visual transitions respect macOS Reduce Motion.
+
+The brightness slider uses the built-in display reading through DisplayServices and sends bounded brightness-key steps while waiting for measured feedback. It is stepwise, not a guarantee of pixel-perfect continuous adjustment. It cancels reconciliation on mode changes and cools down after cancelling an in-flight event. Reading and key events can fail due to OS or permission changes; the slider is disabled when no reading is available.
+
+A local existing preset may use `{"type":"localLevel","align":"right"}` in place of the old level-control region. Do not commit personal presets, API keys or Spotify information. The existing trial relies on `~/Library/Application Support/MTMR/LevelControl/read-brightness` and `volume-capability/check` for the displayed level and output-device availability. It also depends on other user-specific scripts for artwork, Spotify and CPU/memory. Those helpers and their application lifecycle checks need verification against the final application identifier.
+
+For the experimental build, Sparkle automatic checks and downloads are disabled to avoid upstream releases replacing the customized build. A manually invoked upstream update check remains in the menu with an explicit warning; a fork-specific signed feed is required before independent distribution. Existing login-at-startup code remains present and has not been tested in this build.
+
+An unsigned arm64 debug build and fake-data brightness-step and Reduce Motion tests succeeded locally. Physical Touch Bar interaction, actual brightness changes, Spotify artwork, existing widgets, audio route changes, layout, permissions, launch-at-login and updater behavior are not yet verified. Do not install over an existing app without a backup and explicit real-device validation.
