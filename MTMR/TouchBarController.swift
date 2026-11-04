@@ -145,13 +145,8 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
     func didItemsChange(prevItems: [NSTouchBarItem.Identifier: NSTouchBarItem], prevSwipeItems: [SwipeItem]) -> Bool {
         var changed = items.count != prevItems.count || swipeItems.count != prevSwipeItems.count
         
-        if !changed {
-            for (item, prevItem) in zip(items, prevItems) {
-                if item.key != prevItem.key {
-                    changed = true
-                    break
-                }
-            }
+        if !changed && Set(items.keys) != Set(prevItems.keys) {
+            changed = true
         }
 
         if !changed {
@@ -263,6 +258,10 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
     }
 
     func createItems() {
+        // Reuse live items for stable identifiers. Recreating them on each app
+        // activation would duplicate workers and detach the visible views.
+        let previousItems = items
+        let previousSwipes = Dictionary(uniqueKeysWithValues: swipeItems.map { ($0.identifier, $0) })
         items = [:]
         swipeItems = []
 
@@ -280,7 +279,7 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
             }
             
             if show {
-                let item = createItem(forIdentifier: identifier, definition: definition)
+                let item = previousItems[identifier] ?? previousSwipes[identifier] ?? createItem(forIdentifier: identifier, definition: definition)
                 if item is SwipeItem {
                     swipeItems.append(item as! SwipeItem)
                 } else {
@@ -449,19 +448,7 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
         case let .keyPress(keycode: keycode):
             return { GenericKeyPress(keyCode: CGKeyCode(keycode)).send() }
         case let .appleScript(source: source):
-            guard let appleScript = source.appleScript else {
-                print("cannot create apple script for item \(action)")
-                return {}
-            }
-            return {
-                DispatchQueue.appleScriptQueue.async {
-                    var error: NSDictionary?
-                    appleScript.executeAndReturnError(&error)
-                    if let error = error {
-                        print("error \(error) when handling \(action) ")
-                    }
-                }
-            }
+            return makeScriptAction(source: source)
         case let .shellScript(executable: executable, parameters: parameters):
             return {
                 let task = Process()
@@ -493,19 +480,7 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
         case let .keyPress(keycode: keycode):
             return { GenericKeyPress(keyCode: CGKeyCode(keycode)).send() }
         case let .appleScript(source: source):
-            guard let appleScript = source.appleScript else {
-                print("cannot create apple script for item \(item)")
-                return {}
-            }
-            return {
-                DispatchQueue.appleScriptQueue.async {
-                    var error: NSDictionary?
-                    appleScript.executeAndReturnError(&error)
-                    if let error = error {
-                        print("error \(error) when handling \(item) ")
-                    }
-                }
-            }
+            return makeScriptAction(source: source)
         case let .shellScript(executable: executable, parameters: parameters):
             return {
                 let task = Process()
@@ -537,17 +512,7 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
         case let .keyPress(keycode: keycode):
             return { GenericKeyPress(keyCode: CGKeyCode(keycode)).send() }
         case let .appleScript(source: source):
-            guard let appleScript = source.appleScript else {
-                print("cannot create apple script for item \(item)")
-                return {}
-            }
-            return {
-                var error: NSDictionary?
-                appleScript.executeAndReturnError(&error)
-                if let error = error {
-                    print("error \(error) when handling \(item) ")
-                }
-            }
+            return makeScriptAction(source: source)
         case let .shellScript(executable: executable, parameters: parameters):
             return {
                 let task = Process()

@@ -11,7 +11,8 @@ import Foundation
 class CPUBarItem: CustomButtonTouchBarItem {
     private let refreshInterval: TimeInterval
     private var refreshQueue: DispatchQueue? = DispatchQueue(label: "mtmr.cpu")
-    private let defaultSingleTapScript: NSAppleScript! = "activate application \"Activity Monitor\"\rtell application \"System Events\"\r\ttell process \"Activity Monitor\"\r\t\ttell radio button \"CPU\" of radio group 1 of group 2 of toolbar 1 of window 1 to perform action \"AXPress\"\r\tend tell\rend tell".appleScript
+    private lazy var defaultSingleTapAction = makeInlineScriptAction(defaultSingleTapScript)
+    private let defaultSingleTapScript: String = "activate application \"Activity Monitor\"\rtell application \"System Events\"\r\ttell process \"Activity Monitor\"\r\t\ttell radio button \"CPU\" of radio group 1 of group 2 of toolbar 1 of window 1 to perform action \"AXPress\"\r\tend tell\rend tell"
 
     init(identifier: NSTouchBarItem.Identifier, refreshInterval: TimeInterval) {
         self.refreshInterval = refreshInterval
@@ -70,9 +71,7 @@ class CPUBarItem: CustomButtonTouchBarItem {
     }
 
     func defaultTapAction() {
-        refreshQueue?.async { [weak self] in
-            self?.defaultSingleTapScript.executeAndReturnError(nil)
-        }
+        defaultSingleTapAction()
     }
     
     deinit {

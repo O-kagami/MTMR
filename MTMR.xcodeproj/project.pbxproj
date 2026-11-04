@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+        C0DE00000000000000000001 /* WorkerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000002 /* WorkerSession.swift */; };
 		D10CD10CD10CD10CD10C0001 /* FlexibleDockLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10CD10CD10CD10CD10C0002 /* FlexibleDockLayout.swift */; };
 		A178A178A178A178A1780001 /* SliderEdgeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A178A178A178A178A1780002 /* SliderEdgeObserver.swift */; };
 		E217E217E217E217E2170001 /* BrightnessWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E217E217E217E217E2170002 /* BrightnessWriter.swift */; };
@@ -94,6 +95,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+        C0DE00000000000000000002 /* WorkerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerSession.swift; sourceTree = "<group>"; };
 		D10CD10CD10CD10CD10C0002 /* FlexibleDockLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexibleDockLayout.swift; sourceTree = "<group>"; };
 		A178A178A178A178A1780002 /* SliderEdgeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SliderEdgeObserver.swift; sourceTree = "<group>"; };
 		E217E217E217E217E2170002 /* BrightnessWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessWriter.swift; sourceTree = "<group>"; };
@@ -238,6 +240,7 @@
 		B082B251205C7D8000BC04DC /* MTMR */ = {
 			isa = PBXGroup;
 			children = (
+                C0DE00000000000000000002 /* WorkerSession.swift */,
 				B0B88A07208CD12000A2C160 /* Widgets */,
 				B0B1743B207D6ED40004B740 /* CBridge */,
 				B0B17426207D6AFE0004B740 /* AppleScripts */,
@@ -354,6 +357,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = B082B275205C7D8000BC04DC /* Build configuration list for PBXNativeTarget "MTMR" */;
 			buildPhases = (
+                C0DE00000000000000000003 /* Build Script Worker */,
 				B082B24B205C7D8000BC04DC /* Sources */,
 				B082B24C205C7D8000BC04DC /* Frameworks */,
 				B082B24D205C7D8000BC04DC /* Resources */,
@@ -465,6 +469,16 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+        C0DE00000000000000000003 /* Build Script Worker */ = {
+            isa = PBXShellScriptBuildPhase;
+            buildActionMask = 2147483647;
+            files = ();
+            inputPaths = ("$(SRCROOT)/ScriptWorker/main.swift", "$(SRCROOT)/ScriptWorker/build.sh");
+            outputPaths = ("$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/MTMRScriptWorker");
+            runOnlyForDeploymentPostprocessing = 0;
+            shellPath = /bin/sh;
+            shellScript = "\"${SRCROOT}/ScriptWorker/build.sh\"";
+        };
 		B0679BBF215AE085000FC6B4 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -489,6 +503,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+                C0DE00000000000000000001 /* WorkerSession.swift in Sources */,
 				B059D622205E03F5006E6B86 /* TouchBarController.swift in Sources */,
 				B05600D32083E9BB00EB218D /* CustomSlider.swift in Sources */,
 				36C2ECD9207B74B4003CDA33 /* AppleScriptTouchBarItem.swift in Sources */,

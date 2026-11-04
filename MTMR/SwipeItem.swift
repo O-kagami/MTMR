@@ -6,11 +6,12 @@
 //  Copyright © 2020 Anton Palgunov. All rights reserved.
 //
 
-import Foundation
+import AppKit
 import Foundation
 
 class SwipeItem: NSCustomTouchBarItem {
-    private var scriptApple: NSAppleScript?
+    private var scriptAppleAction: (() -> Void)?
+    private var scriptAppleIdentity: Data?
     private var scriptBash: String?
     private var direction: String
     private var fingers: Int
@@ -19,7 +20,8 @@ class SwipeItem: NSCustomTouchBarItem {
         self.direction = direction
         self.fingers = fingers
         self.scriptBash = sourceBash?.string
-        self.scriptApple = sourceApple?.appleScript
+        self.scriptAppleAction = sourceApple.flatMap { makeScriptAction(source: $0) }
+        self.scriptAppleIdentity = sourceApple?.data
         self.minOffset = minOffset
         super.init(identifier: identifier)
     }
@@ -38,16 +40,7 @@ class SwipeItem: NSCustomTouchBarItem {
     }
 
     func execute() {
-        if scriptApple != nil {
-            DispatchQueue.appleScriptQueue.async {
-                var error: NSDictionary?
-                self.scriptApple?.executeAndReturnError(&error)
-                if let error = error {
-                    print("SwipeItem apple script error: \(error)")
-                    return
-                }
-            }
-        }
+        scriptAppleAction?()
         if scriptBash != nil {
             DispatchQueue.shellScriptQueue.async {
                 let task = Process()
@@ -70,7 +63,7 @@ class SwipeItem: NSCustomTouchBarItem {
     
     func isEqual(_ object: AnyObject?) -> Bool {
         if let object = object as? SwipeItem {
-            return self.scriptApple?.source as String? == object.scriptApple?.source as String? && self.scriptBash == object.scriptBash && self.direction == object.direction && self.fingers == object.fingers && self.minOffset == object.minOffset
+            return self.scriptAppleIdentity == object.scriptAppleIdentity && self.scriptBash == object.scriptBash && self.direction == object.direction && self.fingers == object.fingers && self.minOffset == object.minOffset
         } else {
             return false
         }

@@ -5,6 +5,8 @@ class DarkModeBarItem: CustomButtonTouchBarItem, Widget {
     static var identifier: String = "com.toxblh.mtmr.darkmode"
 
     private var timer: Timer!
+    private lazy var darkOn = makeInlineScriptAction("tell application \"System Events\" to tell appearance preferences to set dark mode to true")
+    private lazy var darkOff = makeInlineScriptAction("tell application \"System Events\" to tell appearance preferences to set dark mode to false")
 
     init(identifier: NSTouchBarItem.Identifier) {
         super.init(identifier: identifier, title: "")
@@ -23,8 +25,8 @@ class DarkModeBarItem: CustomButtonTouchBarItem, Widget {
     }
 
     func DarkModeToggle() {
-        DarkMode.isEnabled = !DarkMode.isEnabled
-        refresh()
+        if DarkMode.isEnabled { darkOff() } else { darkOn() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in self?.refresh() }
     }
 
     @objc func refresh() {
@@ -34,24 +36,7 @@ class DarkModeBarItem: CustomButtonTouchBarItem, Widget {
 
 
 struct DarkMode {
-    private static let prefix = "tell application \"System Events\" to tell appearance preferences to"
-
     static var isEnabled: Bool {
-        get {
-            return UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
-        }
-        set {
-            toggle(force: newValue)
-        }
-    }
-
-    static func toggle(force: Bool? = nil) {
-        let value = force.map(String.init) ?? "not dark mode"
-        _ = runAppleScript("\(prefix) set dark mode to \(value)")
+        UserDefaults.standard.string(forKey: "AppleInterfaceStyle") == "Dark"
     }
 }
-
-func runAppleScript(_ source: String) -> String? {
-    return NSAppleScript(source: source)?.executeAndReturnError(nil).stringValue
-}
-
