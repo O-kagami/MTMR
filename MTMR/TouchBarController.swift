@@ -611,12 +611,7 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
         toggle.setWidth(value: 36)
         toggle.actions = [ItemAction(trigger: .singleTap, { [weak self] in self?.switchMode() })]
         brightness.setWidth(value: 80)
-        let previousVolume = volume.sliderItem.floatValue
-        let sliderCell = LocalVolumeSliderCell()
-        volume.sliderItem.cell = sliderCell
-        volume.sliderItem.minValue = 0
-        volume.sliderItem.maxValue = 100
-        volume.sliderItem.floatValue = previousVolume
+        // Use the same standard round knob as the brightness slider.
         volume.sliderItem.target = self
         volume.sliderItem.action = #selector(sliderMoved(_:))
         volume.setWidth(value: 80)
@@ -667,10 +662,6 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
         }
         let icon = NSImage(systemSymbolName: symbol, accessibilityDescription: isVolume ? "音量" : "明るさ")
         toggle.image = icon
-        if isVolume, let cell = volume.sliderItem.cell as? LocalVolumeSliderCell {
-            cell.icon = icon
-            volume.sliderItem.needsDisplay = true
-        }
     }
     private func refresh() {
         if isVolume {
@@ -720,31 +711,5 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
                 }
             }
         }
-    }
-}
-
-// Clamp the custom icon's painted bounds to the bar at both endpoints.
-private final class LocalVolumeSliderCell: NSSliderCell {
-    var icon: NSImage?
-    private var bar = NSRect.zero
-    override func drawBar(inside rect: NSRect, flipped: Bool) {
-        bar = rect
-        super.drawBar(inside: rect, flipped: flipped)
-    }
-    override func drawKnob(_ rect: NSRect) {
-        guard let icon = icon, bar.width > 0 else { super.drawKnob(rect); return }
-        let width = min(CGFloat(16), bar.width)
-        let denominator = maxValue - minValue
-        let ratio = denominator > 0 ? max(0, min(1, (doubleValue - minValue) / denominator)) : 0
-        let x = bar.minX + (bar.width - width) * CGFloat(ratio)
-        let target = NSRect(x: x, y: bar.midY - width / 2, width: width, height: width)
-        // Tint in an isolated image so source-in cannot affect the track below.
-        let whiteIcon = NSImage(size: target.size, flipped: false) { bounds in
-            icon.draw(in: bounds, from: .zero, operation: .sourceOver, fraction: 1)
-            NSColor.white.setFill()
-            bounds.fill(using: .sourceIn)
-            return true
-        }
-        whiteIcon.draw(in: target, from: .zero, operation: .sourceOver, fraction: 1)
     }
 }

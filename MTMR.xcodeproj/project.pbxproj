@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E217E217E217E217E2170001 /* BrightnessWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = E217E217E217E217E2170002 /* BrightnessWriter.swift */; };
 		A174A174A174A174A1740001 /* TouchBarMotion.swift in Sources */ = {isa = PBXBuildFile; fileRef = A174A174A174A174A1740002 /* TouchBarMotion.swift */; };
 		36300E83209F040900B31C71 /* SupportHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0008E542080286C003AD4DD /* SupportHelpers.swift */; };
 		36300E8F20A2CF3400B31C71 /* AppleScriptDefinitionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36300E8E20A2CF3400B31C71 /* AppleScriptDefinitionTests.swift */; };
@@ -28,7 +29,6 @@
 		5DC6CA02241F92CB005CD5E8 /* Music.nowPlaying.scpt in Resources */ = {isa = PBXBuildFile; fileRef = 5DC6CA00241F92CB005CD5E8 /* Music.nowPlaying.scpt */; };
 		5DC6CA03241F92CB005CD5E8 /* Music.next.scpt in Resources */ = {isa = PBXBuildFile; fileRef = 5DC6CA01241F92CB005CD5E8 /* Music.next.scpt */; };
 		60173D3E20C0031B002C305F /* LaunchAtLoginController.m in Sources */ = {isa = PBXBuildFile; fileRef = 60173D3D20C0031B002C305F /* LaunchAtLoginController.m */; };
-		F19A0E010000000000000001 /* BrightnessStepper.swift in Sources */ = {isa = PBXBuildFile; fileRef = F19A0E010000000000000002 /* BrightnessStepper.swift */; };
 		6027D1B92080E52A004FFDC7 /* BrightnessViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6027D1B72080E52A004FFDC7 /* BrightnessViewController.swift */; };
 		6027D1BA2080E52A004FFDC7 /* VolumeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6027D1B82080E52A004FFDC7 /* VolumeViewController.swift */; };
 		6042B6A72083E03A00C525C8 /* AppScrubberTouchBarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6042B6A62083E03A00C525C8 /* AppScrubberTouchBarItem.swift */; };
@@ -92,6 +92,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		E217E217E217E217E2170002 /* BrightnessWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessWriter.swift; sourceTree = "<group>"; };
 		A174A174A174A174A1740002 /* TouchBarMotion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchBarMotion.swift; sourceTree = "<group>"; };
 		36300E85209FD16700B31C71 /* .travis.yml */ = {isa = PBXFileReference; lastKnownFileType = text; path = .travis.yml; sourceTree = SOURCE_ROOT; };
 		36300E8E20A2CF3400B31C71 /* AppleScriptDefinitionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleScriptDefinitionTests.swift; sourceTree = "<group>"; };
@@ -116,7 +117,6 @@
 		5DC6CA01241F92CB005CD5E8 /* Music.next.scpt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Music.next.scpt; sourceTree = "<group>"; };
 		60173D3C20C0031B002C305F /* LaunchAtLoginController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LaunchAtLoginController.h; sourceTree = "<group>"; };
 		60173D3D20C0031B002C305F /* LaunchAtLoginController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LaunchAtLoginController.m; sourceTree = "<group>"; };
-		F19A0E010000000000000002 /* BrightnessStepper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrightnessStepper.swift; sourceTree = "<group>"; };
 		6027D1B72080E52A004FFDC7 /* BrightnessViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = BrightnessViewController.swift; sourceTree = "<group>"; };
 		6027D1B82080E52A004FFDC7 /* VolumeViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = VolumeViewController.swift; sourceTree = "<group>"; };
 		6042B6A62083E03A00C525C8 /* AppScrubberTouchBarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppScrubberTouchBarItem.swift; sourceTree = "<group>"; };
@@ -319,8 +319,8 @@
 				6042B6A62083E03A00C525C8 /* AppScrubberTouchBarItem.swift */,
 				B04B7BB62087398C00C835D0 /* BatteryBarItem.swift */,
 				6027D1B72080E52A004FFDC7 /* BrightnessViewController.swift */,
+				E217E217E217E217E2170002 /* BrightnessWriter.swift */,
 				A174A174A174A174A1740002 /* TouchBarMotion.swift */,
-				F19A0E010000000000000002 /* BrightnessStepper.swift */,
 				4CF222EA26CC00470025BDA7 /* CPUBarItem.swift */,
 				607EEA4C2087A8DA009DA5F0 /* CurrencyBarItem.swift */,
 				B081732B213739FE005D4908 /* DnDBarItem.swift */,
@@ -521,8 +521,8 @@
 				607EEA4D2087A8DA009DA5F0 /* CurrencyBarItem.swift in Sources */,
 				4CC9FEDC22FDEA65001512EB /* AMR_ANSIEscapeHelper.m in Sources */,
 				6027D1B92080E52A004FFDC7 /* BrightnessViewController.swift in Sources */,
+				E217E217E217E217E2170001 /* BrightnessWriter.swift in Sources */,
 				A174A174A174A174A1740001 /* TouchBarMotion.swift in Sources */,
-				F19A0E010000000000000001 /* BrightnessStepper.swift in Sources */,
 				368EDDE720812A1D00E10953 /* ScrollViewItem.swift in Sources */,
 				B04B7BB72087398C00C835D0 /* BatteryBarItem.swift in Sources */,
 			);
