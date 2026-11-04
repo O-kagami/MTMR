@@ -28,6 +28,12 @@ class BasicView: NSCustomTouchBarItem, NSGestureRecognizerDelegate {
         let stackView = NSStackView(views: views)
         stackView.spacing = 8
         stackView.orientation = .horizontal
+        // Only opted-in docks absorb free space and compression. All existing
+        // width constraints and non-Dock layout defaults stay untouched.
+        for item in items {
+            guard let dock = item as? AppScrubberTouchBarItem, dock.flexibleWidth else { continue }
+            FlexibleDockLayout.configure(dock.view)
+        }
         view = stackView
 
         twofingers = NSPanGestureRecognizer(target: self, action: #selector(twofingersHandler(_:)))

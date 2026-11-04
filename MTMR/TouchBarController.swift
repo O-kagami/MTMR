@@ -197,7 +197,10 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
             items[identifier]
         })
 
-        basicView = BasicView(identifier: basicViewIdentifier, items:leftItems + [scrollArea] + rightItems, swipeItems: swipeItems)
+        // Avoid reserving an empty center gap next to a flexible Dock.
+        let hasFlexibleDock = leftItems.contains { ($0 as? AppScrubberTouchBarItem)?.flexibleWidth == true }
+        let middle: [NSTouchBarItem] = centerItems.isEmpty && hasFlexibleDock ? [] : [scrollArea]
+        basicView = BasicView(identifier: basicViewIdentifier, items: leftItems + middle + rightItems, swipeItems: swipeItems)
         basicView?.legacyGesturesEnabled = AppSettings.multitouchGestures
     }
 
@@ -345,14 +348,17 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
         case let .cpu(refreshInterval: refreshInterval):
             barItem = CPUBarItem(identifier: identifier, refreshInterval: refreshInterval)
         case let .dock(autoResize: autoResize, filter: regexString):
+            let flexible: Bool
+            if case .flexibleDock(true)? = item.additionalParameters[.flexibleDock], item.align == .left { flexible = true }
+            else { flexible = false }
             if let regexString = regexString {
                 guard let regex = try? NSRegularExpression(pattern: regexString, options: []) else {
                     barItem = CustomButtonTouchBarItem(identifier: identifier, title: "Bad regex")
                     break
                 }
-                barItem = AppScrubberTouchBarItem(identifier: identifier, autoResize: autoResize, filter: regex)
+                barItem = AppScrubberTouchBarItem(identifier: identifier, autoResize: autoResize && !flexible, filter: regex)
             } else {
-                barItem = AppScrubberTouchBarItem(identifier: identifier, autoResize: autoResize)
+                barItem = AppScrubberTouchBarItem(identifier: identifier, autoResize: autoResize && !flexible)
             }
         case .volume:
             if case let .image(source)? = item.additionalParameters[.image] {
@@ -414,7 +420,13 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
         if case let .background(color)? = item.additionalParameters[.background], let item = barItem as? CustomButtonTouchBarItem {
             item.backgroundColor = color
         }
-        if case let .width(value)? = item.additionalParameters[.width], let widthBarItem = barItem as? CanSetWidth {
+        if let dock = barItem as? AppScrubberTouchBarItem,
+           case .flexibleDock(true)? = item.additionalParameters[.flexibleDock], item.align == .left {
+            dock.flexibleWidth = true
+        }
+        if case let .width(value)? = item.additionalParameters[.width],
+           (barItem as? AppScrubberTouchBarItem)?.flexibleWidth != true,
+           let widthBarItem = barItem as? CanSetWidth {
             widthBarItem.setWidth(value: value)
         }
         if case let .image(source)? = item.additionalParameters[.image], let item = barItem as? CustomButtonTouchBarItem {
@@ -611,6 +623,8 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
         toggle.setWidth(value: 36)
         toggle.actions = [ItemAction(trigger: .singleTap, { [weak self] in self?.switchMode() })]
         brightness.setWidth(value: 80)
+        brightness.sliderItem.addGestureRecognizer(SliderEdgeObserver(slider: brightness.sliderItem))
+        volume.sliderItem.addGestureRecognizer(SliderEdgeObserver(slider: volume.sliderItem))
         // Use the same standard round knob as the brightness slider.
         volume.sliderItem.target = self
         volume.sliderItem.action = #selector(sliderMoved(_:))

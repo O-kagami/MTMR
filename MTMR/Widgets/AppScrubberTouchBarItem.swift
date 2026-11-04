@@ -10,6 +10,7 @@ import Cocoa
 class AppScrubberTouchBarItem: NSCustomTouchBarItem {
     private var scrollView = NSScrollView()
     private var autoResize: Bool = false
+    var flexibleWidth: Bool = false
     private var widthConstraint: NSLayoutConstraint?
     private let filter: NSRegularExpression?
 

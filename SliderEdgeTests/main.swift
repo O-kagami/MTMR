@@ -1,0 +1,53 @@
+import AppKit
+let b = CGRect(x: 0, y: 0, width: 80, height: 30)
+func check(_ actual: SliderEdgePolicy.Edge?, _ expected: SliderEdgePolicy.Edge?) { precondition(actual == expected, "\(String(describing: actual)) != \(String(describing: expected))") }
+check(SliderEdgePolicy.edge(startX: 40, endX: 0, bounds: b), .minimum)
+check(SliderEdgePolicy.edge(startX: 40, endX: 80, bounds: b), .maximum)
+check(SliderEdgePolicy.edge(startX: 40, endX: -10, bounds: b), .minimum)
+check(SliderEdgePolicy.edge(startX: 40, endX: 90, bounds: b), .maximum)
+check(SliderEdgePolicy.edge(startX: 40, endX: 20, bounds: b), nil)
+check(SliderEdgePolicy.edge(startX: 2, endX: 2, bounds: b), nil)
+check(SliderEdgePolicy.edge(startX: 3, endX: 4, bounds: b), nil)
+check(SliderEdgePolicy.edge(startX: .nan, endX: 0, bounds: b), nil)
+check(SliderEdgePolicy.edge(startX: 40, endX: 0, bounds: .zero), nil)
+print("Slider edge policy tests passed")
+let slider = NSSlider(frame: CGRect(x: 0, y: 0, width: 80, height: 30))
+slider.minValue = 0
+slider.maxValue = 100
+let cell = slider.cell as! NSSliderCell
+let bar = cell.barRect(flipped: false)
+slider.doubleValue = 0
+let minKnob = cell.knobRect(flipped: false)
+slider.doubleValue = 100
+let maxKnob = cell.knobRect(flipped: false)
+precondition(abs(minKnob.minX - bar.minX) < 0.01, "0% knob must start at bar edge")
+precondition(abs(maxKnob.maxX - bar.maxX) < 0.01, "100% knob must end at bar edge")
+print("Standard slider endpoint geometry tests passed")
+final class TestTarget: NSObject { @objc func change(_ sender: Any?) {} }
+let target = TestTarget()
+slider.target = target
+slider.action = #selector(TestTarget.change(_:))
+let observer = SliderEdgeObserver(slider: slider)
+slider.addGestureRecognizer(observer)
+precondition(slider.target === target, "native slider target must remain intact")
+precondition(slider.action == #selector(TestTarget.change(_:)), "native slider action must remain intact")
+precondition(!observer.delaysPrimaryMouseButtonEvents, "native input must not be delayed")
+precondition(observer.state == .possible, "passive observer must not preempt native input")
+print("Native slider wiring tests passed")
+var swipe = SliderSwipeSession()
+swipe.begin(x: 40, activeTouches: 1)
+swipe.move(activeTouches: 1)
+precondition(swipe.end(x: 0, remainingTouches: 0, bounds: b) == .minimum, "single finger edge swipe")
+swipe.begin(x: 40, activeTouches: 1)
+swipe.move(activeTouches: 2)
+swipe.move(activeTouches: 1)
+precondition(swipe.end(x: 0, remainingTouches: 0, bounds: b) == nil, "second finger cancels permanently")
+swipe.begin(x: 40, activeTouches: 1)
+swipe.begin(x: 42, activeTouches: 2)
+precondition(swipe.end(x: 80, remainingTouches: 1, bounds: b) == nil, "second touch begin cancels")
+swipe.begin(x: 40, activeTouches: 2)
+precondition(swipe.end(x: 80, remainingTouches: 0, bounds: b) == nil, "multitouch cannot begin")
+swipe.begin(x: 40, activeTouches: 1)
+swipe.cancel()
+precondition(swipe.end(x: 80, remainingTouches: 0, bounds: b) == nil, "cancelled event cannot set endpoint")
+print("Multi-touch cancellation tests passed")
