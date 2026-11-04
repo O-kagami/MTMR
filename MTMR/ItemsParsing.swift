@@ -660,6 +660,7 @@ enum LegacyLongActionType: Decodable {
 enum GeneralParameter {
     case width(_: CGFloat)
     case flexibleDock(_: Bool)
+    case playbackAnimation(_: Bool)
     case image(source: SourceProtocol)
     case align(_: Align)
     case bordered(_: Bool)
@@ -674,6 +675,7 @@ struct GeneralParameters: Decodable {
     enum CodingKeys: String, CodingKey {
         case width
         case flexibleDock
+        case playbackAnimation
         case image
         case align
         case bordered
@@ -692,6 +694,10 @@ struct GeneralParameters: Decodable {
 
         if let flexibleDock = try container.decodeIfPresent(Bool.self, forKey: .flexibleDock) {
             result[.flexibleDock] = .flexibleDock(flexibleDock)
+        }
+
+        if let enabled = try container.decodeIfPresent(Bool.self, forKey: .playbackAnimation) {
+            result[.playbackAnimation] = .playbackAnimation(enabled)
         }
 
         if let imageSource = try container.decodeIfPresent(Source.self, forKey: .image) {

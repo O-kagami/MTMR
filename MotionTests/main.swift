@@ -15,9 +15,38 @@ let layer = RecordingLayer()
 view.layer = layer
 TouchBarMotion.fade(view, key: "reduced", reduceMotion: true)
 precondition(layer.recordedAnimation == nil)
-TouchBarMotion.fade(view, key: "enabled", reduceMotion: false)
+TouchBarMotion.fade(view, key: "enabled", duration: 0.10, reduceMotion: false)
 let animation = layer.recordedAnimation as? CATransition
 precondition(layer.recordedKey == "enabled")
 precondition(animation?.type == .fade)
-precondition(abs((animation?.duration ?? 0) - 0.16) < 0.001)
+precondition(abs((animation?.duration ?? 0) - 0.10) < 0.001)
 print("Motion tests passed")
+
+// Swapping the visible control must preserve its siblings and their order.
+let toggle = NSView(), brightness = NSView(), volume = NSView(), label = NSView()
+let stack = NSStackView(views: [toggle, brightness, label])
+for _ in 0..<10 {
+    TouchBarMotion.replaceSlider(in: stack, old: brightness, new: volume)
+    precondition(stack.arrangedSubviews.count == 3)
+    precondition(stack.arrangedSubviews[0] === toggle)
+    precondition(stack.arrangedSubviews[1] === volume)
+    precondition(stack.arrangedSubviews[2] === label)
+    TouchBarMotion.replaceSlider(in: stack, old: volume, new: brightness)
+    precondition(stack.arrangedSubviews[0] === toggle)
+    precondition(stack.arrangedSubviews[1] === brightness)
+    precondition(stack.arrangedSubviews[2] === label)
+}
+print("Rapid switch layout tests passed")
+let fixedToggle = NSView(), fixedBrightness = NSView(), fixedVolume = NSView(), fixedLabel = NSView()
+fixedToggle.widthAnchor.constraint(equalToConstant: 36).isActive = true
+fixedBrightness.widthAnchor.constraint(equalToConstant: 80).isActive = true
+fixedVolume.widthAnchor.constraint(equalToConstant: 80).isActive = true
+fixedLabel.widthAnchor.constraint(equalToConstant: 42).isActive = true
+let fixedStack = NSStackView(views: [fixedToggle, fixedBrightness, fixedLabel])
+fixedStack.orientation = .horizontal
+fixedStack.spacing = 8
+let beforeWidth = fixedStack.fittingSize.width
+TouchBarMotion.replaceSlider(in: fixedStack, old: fixedBrightness, new: fixedVolume)
+let afterWidth = fixedStack.fittingSize.width
+precondition(abs(beforeWidth - afterWidth) < 0.01, "switching should not alter item width")
+print("Fixed-width switch layout test passed")

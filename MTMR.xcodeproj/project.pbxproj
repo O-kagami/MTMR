@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D224D224D224D224D2240001 /* LevelReadGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D224D224D224D224D2240002 /* LevelReadGate.swift */; };
         C0DE00000000000000000001 /* WorkerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000002 /* WorkerSession.swift */; };
 		D10CD10CD10CD10CD10C0001 /* FlexibleDockLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10CD10CD10CD10CD10C0002 /* FlexibleDockLayout.swift */; };
 		A178A178A178A178A1780001 /* SliderEdgeObserver.swift in Sources */ = {isa = PBXBuildFile; fileRef = A178A178A178A178A1780002 /* SliderEdgeObserver.swift */; };
@@ -95,6 +96,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		D224D224D224D224D2240002 /* LevelReadGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelReadGate.swift; sourceTree = "<group>"; };
         C0DE00000000000000000002 /* WorkerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerSession.swift; sourceTree = "<group>"; };
 		D10CD10CD10CD10CD10C0002 /* FlexibleDockLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexibleDockLayout.swift; sourceTree = "<group>"; };
 		A178A178A178A178A1780002 /* SliderEdgeObserver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SliderEdgeObserver.swift; sourceTree = "<group>"; };
@@ -326,6 +328,7 @@
 				6042B6A62083E03A00C525C8 /* AppScrubberTouchBarItem.swift */,
 				B04B7BB62087398C00C835D0 /* BatteryBarItem.swift */,
 				6027D1B72080E52A004FFDC7 /* BrightnessViewController.swift */,
+				D224D224D224D224D2240002 /* LevelReadGate.swift */,
 				D10CD10CD10CD10CD10C0002 /* FlexibleDockLayout.swift */,
 				A178A178A178A178A1780002 /* SliderEdgeObserver.swift */,
 				E217E217E217E217E2170002 /* BrightnessWriter.swift */,
@@ -542,6 +545,7 @@
 				607EEA4D2087A8DA009DA5F0 /* CurrencyBarItem.swift in Sources */,
 				4CC9FEDC22FDEA65001512EB /* AMR_ANSIEscapeHelper.m in Sources */,
 				6027D1B92080E52A004FFDC7 /* BrightnessViewController.swift in Sources */,
+				D224D224D224D224D2240001 /* LevelReadGate.swift in Sources */,
 				D10CD10CD10CD10CD10C0001 /* FlexibleDockLayout.swift in Sources */,
 				A178A178A178A178A1780001 /* SliderEdgeObserver.swift in Sources */,
 				E217E217E217E217E2170001 /* BrightnessWriter.swift in Sources */,

@@ -401,6 +401,11 @@ class TouchBarController: NSObject, NSTouchBarDelegate {
             barItem = UpNextScrubberTouchBarItem(identifier: identifier, interval: 60, from: from, to: to, maxToShow: maxToShow, autoResize: autoResize)
         }
 
+        if let playbackItem = barItem as? AppleScriptTouchBarItem,
+           case let .playbackAnimation(enabled)? = item.additionalParameters[.playbackAnimation] {
+            playbackItem.playbackAnimationEnabled = enabled
+        }
+
         if let action = self.action(forItem: item), let item = barItem as? CustomButtonTouchBarItem {
             item.actions.append(ItemAction(trigger: .singleTap, action))
         }
@@ -575,6 +580,8 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
     private var loadingBrightness = false
     private var checkingVolume = false
     private var currentSymbol: String?
+    private var lastVolumeAvailable: Bool?
+    private var brightnessReadGate = LevelReadGate()
 
     override init(identifier: NSTouchBarItem.Identifier) {
         super.init(identifier: identifier)
@@ -588,11 +595,23 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
         toggle.setWidth(value: 36)
         toggle.actions = [ItemAction(trigger: .singleTap, { [weak self] in self?.switchMode() })]
         brightness.setWidth(value: 80)
+        brightness.onUserInteraction = { [weak self] in
+            self?.brightnessReadGate.interacted(at: ProcessInfo.processInfo.systemUptime)
+        }
+        brightness.onUserValue = { [weak self] value in
+            guard let self = self, !self.isVolume else { return }
+            self.showLevel(value)
+        }
+        volume.onHardwareValue = { [weak self] value in
+            guard let self = self, self.isVolume else { return }
+            self.showLevel(value)
+        }
         brightness.sliderItem.addGestureRecognizer(SliderEdgeObserver(slider: brightness.sliderItem))
         volume.sliderItem.addGestureRecognizer(SliderEdgeObserver(slider: volume.sliderItem))
         // Use the same standard round knob as the brightness slider.
         volume.sliderItem.target = self
         volume.sliderItem.action = #selector(sliderMoved(_:))
+        volume.sliderItem.isContinuous = true
         volume.setWidth(value: 80)
         label.alignment = .center
         label.widthAnchor.constraint(equalToConstant: 42).isActive = true
@@ -602,28 +621,49 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
     deinit { timer?.invalidate() }
-    @objc private func sliderMoved(_ sender: NSSlider) {
-        volume.sliderValueChanged(sender)
-        let level = Int(sender.floatValue)
+    private func showLevel(_ value: Float?) {
+        guard let value = value, value.isFinite, (0...100).contains(value) else {
+            label.stringValue = "--"
+            updateIcon(level: nil)
+            return
+        }
+        let level = Int(value.rounded())
         label.stringValue = "\(level)%"
         updateIcon(level: level)
     }
+    @objc private func sliderMoved(_ sender: NSSlider) {
+        showLevel(volume.applySliderValue(sender))
+    }
     private func switchMode() {
-        TouchBarMotion.fade(stack, key: "localLevelMode")
+        brightnessReadGate.invalidate()
+        TouchBarMotion.fade(stack, key: "localLevelMode", duration: 0.10)
         if !isVolume { brightness.cancelAdjustment() }
         isVolume.toggle()
         render()
         refresh()
     }
     private func render() {
-        for child in stack.arrangedSubviews { stack.removeArrangedSubview(child); child.removeFromSuperview() }
-        updateIcon(level: nil)
-        stack.addArrangedSubview(toggle.view)
-        if isVolume { stack.addArrangedSubview(volume.view) }
-        else { stack.addArrangedSubview(brightness.view) }
-        stack.addArrangedSubview(label)
+        let visibleSlider = isVolume ? volume.view : brightness.view
+        if stack.arrangedSubviews.isEmpty {
+            stack.addArrangedSubview(toggle.view)
+            stack.addArrangedSubview(visibleSlider)
+            stack.addArrangedSubview(label)
+        } else {
+            let oldSlider = isVolume ? brightness.view : volume.view
+            TouchBarMotion.replaceSlider(in: stack, old: oldSlider, new: visibleSlider)
+        }
+        // Present the value already held by the selected control immediately;
+        // the asynchronous device check/read will refresh it when it returns.
+        let level: Int?
+        if isVolume {
+            level = lastVolumeAvailable == false ? nil : Int(volume.sliderItem.floatValue.rounded())
+        } else {
+            level = brightness.sliderItem.isEnabled ? Int(brightness.sliderItem.floatValue.rounded()) : nil
+        }
+        label.stringValue = level.map { "\($0)%" } ?? "--"
+        updateIcon(level: level, animated: false)
     }
-    private func updateIcon(level: Int?) {
+    private func updateIcon(level: Int?, animated: Bool = true) {
         let symbol: String
         if isVolume {
             if let level = level {
@@ -636,7 +676,7 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
             symbol = (level ?? 0) < 50 ? "sun.min.fill" : "sun.max.fill"
         }
         if symbol != currentSymbol {
-            TouchBarMotion.fade(toggle.view, key: "localLevelIcon")
+            if animated { TouchBarMotion.fade(toggle.view, key: "localLevelIcon", duration: 0.10) }
             currentSymbol = symbol
         }
         let icon = NSImage(systemSymbolName: symbol, accessibilityDescription: isVolume ? "音量" : "明るさ")
@@ -658,8 +698,13 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
                     self.checkingVolume = false
-                    if status == "available" { self.volume.sliderItem.isEnabled = true }
-                    else if status == "unavailable" { self.volume.sliderItem.isEnabled = false }
+                    if status == "available" {
+                        self.lastVolumeAvailable = true
+                        self.volume.sliderItem.isEnabled = true
+                    } else if status == "unavailable" {
+                        self.lastVolumeAvailable = false
+                        self.volume.sliderItem.isEnabled = false
+                    }
                     if self.isVolume {
                         let level = self.volume.sliderItem.isEnabled ? Int(self.volume.sliderItem.floatValue) : nil
                         self.label.stringValue = level.map { "\($0)%" } ?? "--"
@@ -671,6 +716,8 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
         }
         guard !loadingBrightness else { return }
         loadingBrightness = true
+        let issuedGeneration = brightnessReadGate.generation
+        let issuedAt = ProcessInfo.processInfo.systemUptime
         DispatchQueue.global(qos: .utility).async { [weak self] in
             let task = Process()
             task.executableURL = URL(fileURLWithPath: appSupportDirectory + "/LevelControl/read-brightness")
@@ -683,10 +730,10 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.loadingBrightness = false
-                if !self.isVolume {
-                    self.label.stringValue = value
-                    let digits = value.filter { $0.isNumber }
-                    self.updateIcon(level: Int(digits))
+                if !self.isVolume && self.brightnessReadGate.allows(issuedGeneration, issuedAt: issuedAt, completedAt: ProcessInfo.processInfo.systemUptime) {
+                    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let number = trimmed.hasSuffix("%") ? String(trimmed.dropLast()) : ""
+                    self.showLevel(Float(number))
                 }
             }
         }

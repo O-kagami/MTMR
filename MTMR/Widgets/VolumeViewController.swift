@@ -6,6 +6,9 @@ import CoreAudio
 class VolumeViewController: NSCustomTouchBarItem {
     private(set) var sliderItem: CustomSlider!
     private var currentDeviceId: AudioObjectID = AudioObjectID(0)
+    private var lastUserChange: TimeInterval = -.infinity
+    private var pendingHardwareSync: DispatchWorkItem?
+    var onHardwareValue: ((Float?) -> Void)?
 
     init(identifier: NSTouchBarItem.Identifier, image: NSImage? = nil) {
         super.init(identifier: identifier)
@@ -42,9 +45,7 @@ class VolumeViewController: NSCustomTouchBarItem {
         self.removeLastAudioVolumeChangeListener()
         currentDeviceId = defaultDeviceID
         self.addCurrentAudioVolumeChangedListener()
-        DispatchQueue.main.async {
-            self.sliderItem.floatValue = self.getInputGain() * 100
-        }
+        DispatchQueue.main.async { [weak self] in self?.scheduleHardwareSync() }
     }
     
     private func addCurrentAudioVolumeChangedListener() {
@@ -68,9 +69,7 @@ class VolumeViewController: NSCustomTouchBarItem {
     }
 
     func audioObjectPropertyListenerBlock(numberAddresses _: UInt32, addresses _: UnsafePointer<AudioObjectPropertyAddress>) {
-        DispatchQueue.main.async {
-            self.sliderItem.floatValue = self.getInputGain() * 100
-        }
+        DispatchQueue.main.async { [weak self] in self?.scheduleHardwareSync() }
     }
 
     required init?(coder _: NSCoder) {
@@ -78,13 +77,50 @@ class VolumeViewController: NSCustomTouchBarItem {
     }
 
     deinit {
+        pendingHardwareSync?.cancel()
         sliderItem.unbind(NSBindingName.value)
     }
 
-    @objc func sliderValueChanged(_ sender: Any) {
-        if let sliderItem = sender as? NSSlider {
-            _ = setInputGain(Float32(sliderItem.intValue) / 100.0)
+    // Delay hardware callbacks while a user is dragging; replay the latest
+    // actual value once input has settled instead of moving the thumb backwards.
+    private func scheduleHardwareSync() {
+        pendingHardwareSync?.cancel()
+        let elapsed = ProcessInfo.processInfo.systemUptime - lastUserChange
+        let delay = max(0, 0.6 - elapsed)
+        let task = DispatchWorkItem { [weak self] in
+            guard let self = self else { return }
+            let actual = self.readOutputGain().map { $0 * 100 }
+            if let actual = actual { self.sliderItem.floatValue = actual }
+            self.onHardwareValue?(actual)
         }
+        pendingHardwareSync = task
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: task)
+    }
+
+    @discardableResult func applySliderValue(_ slider: NSSlider) -> Float? {
+        lastUserChange = ProcessInfo.processInfo.systemUptime
+        pendingHardwareSync?.cancel()
+        let requested = slider.floatValue.rounded()
+        let outcome = LevelWritePolicy.apply(requested, write: { [weak self] percent in
+            guard let self = self else { return false }
+            return self.setInputGain(percent / 100) == noErr
+        }, readActual: { [weak self] in
+            self?.readOutputGain().map { $0 * 100 }
+        })
+        switch outcome {
+        case .accepted(let level):
+            scheduleHardwareSync()
+            return level
+        case .reverted(let actual):
+            slider.floatValue = actual
+            return actual
+        case .unavailable:
+            slider.isEnabled = false
+            return nil
+        }
+    }
+    @objc func sliderValueChanged(_ sender: Any) {
+        if let slider = sender as? NSSlider { _ = applySliderValue(slider) }
     }
 
     private var defaultDeviceID: AudioObjectID {
@@ -98,14 +134,17 @@ class VolumeViewController: NSCustomTouchBarItem {
         return deviceID
     }
 
-    private func getInputGain() -> Float32 {
+    private func getInputGain() -> Float32 { readOutputGain() ?? 0.5 }
+
+    private func readOutputGain() -> Float32? {
         var volume: Float32 = 0.5
         var size: UInt32 = UInt32(MemoryLayout.size(ofValue: volume))
         var address: AudioObjectPropertyAddress = AudioObjectPropertyAddress()
         address.mSelector = AudioObjectPropertySelector(kAudioHardwareServiceDeviceProperty_VirtualMainVolume)
         address.mScope = AudioObjectPropertyScope(kAudioDevicePropertyScopeOutput)
         address.mElement = AudioObjectPropertyElement(kAudioObjectPropertyElementMaster)
-        AudioObjectGetPropertyData(defaultDeviceID, &address, 0, nil, &size, &volume)
+        let result = AudioObjectGetPropertyData(defaultDeviceID, &address, 0, nil, &size, &volume)
+        guard result == noErr, volume.isFinite, (0...1).contains(volume) else { return nil }
         return volume
     }
 

@@ -5,6 +5,10 @@ import Darwin
 class BrightnessViewController: NSCustomTouchBarItem {
     private(set) var sliderItem: CustomSlider!
     private var refreshTimer: Timer?
+    /// The callbacks are delivered on the main thread, after user interaction
+    /// or a failed write has been reconciled with the display's actual value.
+    var onUserInteraction: (() -> Void)?
+    var onUserValue: ((Float?) -> Void)?
     private var lastDragTime: TimeInterval = -.infinity
     private var writeFailed = false
     private let displayServices = dlopen("/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices", RTLD_LAZY)
@@ -44,21 +48,28 @@ class BrightnessViewController: NSCustomTouchBarItem {
     @objc func sliderValueChanged(_ sender: Any) {
         guard let slider = sender as? NSSlider else { return }
         lastDragTime = ProcessInfo.processInfo.systemUptime
+        onUserInteraction?()
         let requested = slider.floatValue / 100
         guard let handle = displayServices, let display = builtInDisplay(),
               let symbol = dlsym(handle, "DisplayServicesSetBrightness") else {
             slider.isEnabled = false
             lastDragTime = -.infinity
-            updateBrightnessSlider()
+            let actual = getBrightness()
+            if let actual = actual { slider.floatValue = actual * 100 }
+            onUserValue?(actual.map { $0 * 100 })
             return
         }
         typealias Setter = @convention(c) (CGDirectDisplayID, Float) -> Int32
         let setter = unsafeBitCast(symbol, to: Setter.self)
         let result = BrightnessWriter.apply(requested) { setter(display, $0) }
-        if result != .accepted {
+        if result == .accepted {
+            onUserValue?(requested * 100)
+        } else {
             writeFailed = true
             slider.isEnabled = false
-            if let actual = getBrightness() { slider.floatValue = actual * 100 }
+            let actual = getBrightness()
+            if let actual = actual { slider.floatValue = actual * 100 }
+            onUserValue?(actual.map { $0 * 100 })
         }
     }
 
