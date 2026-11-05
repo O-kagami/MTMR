@@ -50,3 +50,25 @@ TouchBarMotion.replaceSlider(in: fixedStack, old: fixedBrightness, new: fixedVol
 let afterWidth = fixedStack.fittingSize.width
 precondition(abs(beforeWidth - afterWidth) < 0.01, "switching should not alter item width")
 print("Fixed-width switch layout test passed")
+
+// Brightness is above volume: volume enters from below, brightness from above.
+layer.recordedKey = nil
+layer.recordedAnimation = nil
+TouchBarMotion.slideLevel(view, showVolume: true, reduceMotion: true)
+precondition(layer.recordedAnimation == nil, "Reduce Motion disables the transition")
+TouchBarMotion.slideLevel(view, showVolume: true, reduceMotion: false)
+let volumeTransition = layer.recordedAnimation as? CATransition
+precondition(layer.recordedKey == "localLevelMode")
+precondition(volumeTransition?.type == .push && volumeTransition?.subtype == .fromBottom)
+precondition(abs((volumeTransition?.duration ?? 0) - 0.10) < 0.001)
+TouchBarMotion.slideLevel(view, showVolume: false, reduceMotion: false)
+let brightnessTransition = layer.recordedAnimation as? CATransition
+precondition(brightnessTransition?.type == .push && brightnessTransition?.subtype == .fromTop)
+for index in 0..<20 {
+    let volume = index % 2 == 0
+    TouchBarMotion.slideLevel(view, showVolume: volume, reduceMotion: false)
+    let transition = layer.recordedAnimation as? CATransition
+    precondition(layer.recordedKey == "localLevelMode", "rapid transitions reuse one animation key")
+    precondition(transition?.subtype == (volume ? .fromBottom : .fromTop))
+}
+print("Bidirectional level transition tests passed")

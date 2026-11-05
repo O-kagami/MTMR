@@ -636,7 +636,7 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
     }
     private func switchMode() {
         brightnessReadGate.invalidate()
-        TouchBarMotion.fade(stack, key: "localLevelMode", duration: 0.10)
+        TouchBarMotion.slideLevel(stack, showVolume: !isVolume)
         if !isVolume { brightness.cancelAdjustment() }
         isVolume.toggle()
         render()

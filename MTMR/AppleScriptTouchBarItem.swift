@@ -15,10 +15,7 @@ class AppleScriptTouchBarItem: CustomButtonTouchBarItem {
         didSet { if playbackAnimationEnabled { view.wantsLayer = true } }
     }
 
-    @objc override func handleGestureSingleTap() {
-        if playbackAnimationEnabled { TouchBarMotion.pulse(view) }
-        super.handleGestureSingleTap()
-    }
+    private let playbackMorph = PlaybackMorphController()
 
     init?(identifier: NSTouchBarItem.Identifier, source: SourceProtocol, interval: TimeInterval, alternativeImages: [String: SourceProtocol]) {
         self.interval = max(0.05, interval)
@@ -39,6 +36,7 @@ class AppleScriptTouchBarItem: CustomButtonTouchBarItem {
     required init?(coder _: NSCoder) { fatalError("init(coder:) has not been implemented") }
     deinit {
         pendingRefresh?.cancel()
+        playbackMorph.cancel()
         if let observer = modeObserver { DistributedNotificationCenter.default().removeObserver(observer) }
         session?.stop()
     }
@@ -98,15 +96,25 @@ class AppleScriptTouchBarItem: CustomButtonTouchBarItem {
                     if TouchBarMotion.isGraphModeChange(previous: lastIconKey, next: icon,
                                                         available: Set(alternativeImages.keys)) {
                         view.wantsLayer = true
-                        TouchBarMotion.slideDown(view, key: "cpuMemoryMode")
+                        TouchBarMotion.slideGraph(view, previous: lastIconKey, next: icon,
+                                                  available: Set(alternativeImages.keys), key: "cpuMemoryMode")
                     }
-                    if TouchBarMotion.shouldFadePlayback(enabled: playbackAnimationEnabled, previous: lastIconKey, next: icon) {
-                        TouchBarMotion.fade(view, key: "playbackState", duration: 0.12)
+                    // The shape morph starts only after the real source reports
+                    // a new play/pause state, never optimistically on a tap.
+                    if playbackAnimationEnabled {
+                        let oldImageRect = playbackMorph.currentImageRect ?? (view as? NSButton)?.cell?.imageRect(forBounds: view.bounds) ?? .zero
+                        let isMorph = playbackMorph.animate(from: lastIconKey, to: icon, in: view, imageRect: oldImageRect) { [weak self] in
+                            self?.image = decoded
+                        }
+                        if isMorph { image = nil }
+                        else { image = decoded }
+                    } else {
+                        image = decoded
                     }
-                    image = decoded
                     lastIconKey = icon
                     lastIconStamp = stamp
                 } else {
+                    playbackMorph.cancel()
                     image = nil
                     lastIconKey = nil
                     lastIconStamp = nil
