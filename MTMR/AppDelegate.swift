@@ -15,6 +15,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var isBlockedApp: Bool = false
 
     private let touchBarBrightnessMenu = TouchBarBrightnessMenu()
+    private let weatherLocationMenu = WeatherLocationMenu()
     private var fileSystemSource: DispatchSourceFileSystemObject?
 
     func applicationDidFinishLaunching(_: Notification) {
@@ -154,6 +155,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem.separator())
         menu.addItem(settingSeparator)
         menu.addItem(touchBarBrightnessMenu.makeItem())
+        menu.addItem(weatherLocationMenu.makeItem())
         menu.addItem(hapticFeedback)
         menu.addItem(hideControlStrip)
         menu.addItem(toggleBlackList)

@@ -6,6 +6,40 @@ struct WeatherReading: Equatable {
     let icon: String?
 }
 
+enum WeatherLocationSelection: Equatable {
+    case currentLocation
+    case city(name: String, latitude: Double, longitude: Double)
+}
+
+enum WeatherLocationSettings {
+    static let changed = Notification.Name("MTMRWeatherLocationChanged")
+    private static let key = "weatherLocationSelection"
+
+    static var selection: WeatherLocationSelection { read(from: .standard) }
+
+    static func read(from defaults: UserDefaults) -> WeatherLocationSelection {
+        guard let value = defaults.dictionary(forKey: key), value["mode"] as? String == "city",
+              let name = value["name"] as? String, !name.isEmpty,
+              let latitude = value["latitude"] as? Double, latitude.isFinite, (-90...90).contains(latitude),
+              let longitude = value["longitude"] as? Double, longitude.isFinite, (-180...180).contains(longitude)
+        else { return .currentLocation }
+        return .city(name: name, latitude: latitude, longitude: longitude)
+    }
+
+    static func useCurrentLocation(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: key)
+        NotificationCenter.default.post(name: changed, object: nil)
+    }
+
+    static func useCity(name: String, latitude: Double, longitude: Double, defaults: UserDefaults = .standard) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, latitude.isFinite, (-90...90).contains(latitude),
+              longitude.isFinite, (-180...180).contains(longitude) else { return }
+        defaults.set(["mode": "city", "name": name, "latitude": latitude, "longitude": longitude], forKey: key)
+        NotificationCenter.default.post(name: changed, object: nil)
+    }
+}
+
 enum WeatherResponse {
     /// Construct an HTTPS request using escaped parameters, never forced URLs.
     static func requestURL(latitude: Double, longitude: Double, units: String, apiKey: String) -> URL? {

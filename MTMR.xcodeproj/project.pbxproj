@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C777C777C777C777C7770001 /* WeatherLocationMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = C777C777C777C777C7770002 /* WeatherLocationMenu.swift */; };
 		CA9090909090909090900001 /* IsolatedTouchBarClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA9090909090909090900011 /* IsolatedTouchBarClient.swift */; };
 		CA9090909090909090900002 /* TouchBarBrightnessMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA9090909090909090900012 /* TouchBarBrightnessMenu.swift */; };
 
@@ -101,6 +102,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C777C777C777C777C7770002 /* WeatherLocationMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherLocationMenu.swift; sourceTree = "<group>"; };
 		CA9090909090909090900011 /* IsolatedTouchBarClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsolatedTouchBarClient.swift; sourceTree = "<group>"; };
 		CA9090909090909090900012 /* TouchBarBrightnessMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchBarBrightnessMenu.swift; sourceTree = "<group>"; };
 
@@ -346,6 +348,7 @@
 				E217E217E217E217E2170002 /* BrightnessWriter.swift */,
 				CA9090909090909090900011 /* IsolatedTouchBarClient.swift */,
 				CA9090909090909090900012 /* TouchBarBrightnessMenu.swift */,
+				C777C777C777C777C7770002 /* WeatherLocationMenu.swift */,
 				A174A174A174A174A1740002 /* TouchBarMotion.swift */,
 				4CF222EA26CC00470025BDA7 /* CPUBarItem.swift */,
 				607EEA4C2087A8DA009DA5F0 /* CurrencyBarItem.swift */,
@@ -580,6 +583,7 @@
 				E217E217E217E217E2170001 /* BrightnessWriter.swift in Sources */,
 				CA9090909090909090900001 /* IsolatedTouchBarClient.swift in Sources */,
 				CA9090909090909090900002 /* TouchBarBrightnessMenu.swift in Sources */,
+				C777C777C777C777C7770001 /* WeatherLocationMenu.swift in Sources */,
 				A174A174A174A174A1740001 /* TouchBarMotion.swift in Sources */,
 				368EDDE720812A1D00E10953 /* ScrollViewItem.swift in Sources */,
 				B04B7BB72087398C00C835D0 /* BatteryBarItem.swift in Sources */,

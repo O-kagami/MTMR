@@ -22,4 +22,14 @@ precondition(WeatherResponse.requestURL(latitude: 0, longitude: 0, units: "metri
 let url = WeatherResponse.requestURL(latitude: 0, longitude: 0, units: "metric", apiKey: "a&b=1")!
 precondition(url.scheme == "https" && url.host == "api.openweathermap.org")
 precondition(URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first { $0.name == "appid" }?.value == "a&b=1", "key must be a single escaped parameter")
+let suite = "WeatherLocationTests.\(UUID().uuidString)"
+let defaults = UserDefaults(suiteName: suite)!
+defer { defaults.removePersistentDomain(forName: suite) }
+precondition(WeatherLocationSettings.read(from: defaults) == .currentLocation)
+WeatherLocationSettings.useCity(name: "  札幌  ", latitude: 43.06, longitude: 141.35, defaults: defaults)
+precondition(WeatherLocationSettings.read(from: defaults) == .city(name: "札幌", latitude: 43.06, longitude: 141.35))
+WeatherLocationSettings.useCity(name: "bad", latitude: 91, longitude: 0, defaults: defaults)
+precondition(WeatherLocationSettings.read(from: defaults) == .city(name: "札幌", latitude: 43.06, longitude: 141.35), "invalid input must not overwrite a valid location")
+WeatherLocationSettings.useCurrentLocation(defaults: defaults)
+precondition(WeatherLocationSettings.read(from: defaults) == .currentLocation)
 print("Weather response and URL safety tests passed")
