@@ -85,6 +85,9 @@ class BrightnessViewController: NSCustomTouchBarItem {
         guard builtIns.count == 1 else { return nil }
         return builtIns.first
     }
+    /// Safe read-only snapshot for the local level indicator.
+    func currentBrightnessPercent() -> Float? { getBrightness().map { $0 * 100 } }
+
     private func getBrightness() -> Float32? {
         guard let handle = displayServices, let display = builtInDisplay(),
               let symbol = dlsym(handle, "DisplayServicesGetBrightness") else { return nil }

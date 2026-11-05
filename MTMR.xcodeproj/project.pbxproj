@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C34EC34EC34EC34EC34E0001 /* WeatherResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34EC34EC34EC34EC34E0002 /* WeatherResponse.swift */; };
+		A0D10A0D10A0D10A0D100001 /* AudioOutputProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0D10A0D10A0D10A0D100002 /* AudioOutputProbe.swift */; };
 		D224D224D224D224D2240001 /* LevelReadGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D224D224D224D224D2240002 /* LevelReadGate.swift */; };
         C0DE00000000000000000001 /* WorkerSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE00000000000000000002 /* WorkerSession.swift */; };
 		D10CD10CD10CD10CD10C0001 /* FlexibleDockLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = D10CD10CD10CD10CD10C0002 /* FlexibleDockLayout.swift */; };
@@ -49,6 +51,7 @@
 		B04B7BB72087398C00C835D0 /* BatteryBarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B04B7BB62087398C00C835D0 /* BatteryBarItem.swift */; };
 		B05600D32083E9BB00EB218D /* CustomSlider.swift in Sources */ = {isa = PBXBuildFile; fileRef = B05600D22083E9BB00EB218D /* CustomSlider.swift */; };
 		B059D622205E03F5006E6B86 /* TouchBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B059D621205E03F5006E6B86 /* TouchBarController.swift */; };
+		A77DA77DA77DA77DA77D0001 /* ManagedMediaInstaller.swift in Sources */ = {isa = PBXBuildFile; fileRef = A77DA77DA77DA77DA77D0002 /* ManagedMediaInstaller.swift */; };
 		B059D624205E04F3006E6B86 /* CustomButtonTouchBarItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = B059D623205E04F3006E6B86 /* CustomButtonTouchBarItem.swift */; };
 		B059D62D205F11E8006E6B86 /* DFRFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B059D62C205F11E8006E6B86 /* DFRFoundation.framework */; };
 		B0679BC1215AE73F000FC6B4 /* dsa_pub.pem in Resources */ = {isa = PBXBuildFile; fileRef = B0679BC0215AE73F000FC6B4 /* dsa_pub.pem */; };
@@ -65,7 +68,6 @@
 		B09EB1E6207C0F8E00D5C1E0 /* MultitouchSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B09EB1E5207C0F8E00D5C1E0 /* MultitouchSupport.framework */; };
 		B0A7E9AA205D6AA400EEF070 /* KeyPress.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0A7E9A9205D6AA400EEF070 /* KeyPress.swift */; };
 		B0B17431207D6B590004B740 /* PlaySmart.scpt in Resources */ = {isa = PBXBuildFile; fileRef = B0B17427207D6B580004B740 /* PlaySmart.scpt */; };
-		B0B17432207D6B590004B740 /* Weather.scpt in Resources */ = {isa = PBXBuildFile; fileRef = B0B17428207D6B580004B740 /* Weather.scpt */; };
 		B0B17433207D6B590004B740 /* Finder.scpt in Resources */ = {isa = PBXBuildFile; fileRef = B0B17429207D6B580004B740 /* Finder.scpt */; };
 		B0B17434207D6B590004B740 /* Battery.scpt in Resources */ = {isa = PBXBuildFile; fileRef = B0B1742A207D6B580004B740 /* Battery.scpt */; };
 		B0B17435207D6B590004B740 /* Spotify.next.scpt in Resources */ = {isa = PBXBuildFile; fileRef = B0B1742B207D6B590004B740 /* Spotify.next.scpt */; };
@@ -96,6 +98,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C34EC34EC34EC34EC34E0002 /* WeatherResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherResponse.swift; sourceTree = "<group>"; };
+		A0D10A0D10A0D10A0D100002 /* AudioOutputProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputProbe.swift; sourceTree = "<group>"; };
 		D224D224D224D224D2240002 /* LevelReadGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelReadGate.swift; sourceTree = "<group>"; };
         C0DE00000000000000000002 /* WorkerSession.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkerSession.swift; sourceTree = "<group>"; };
 		D10CD10CD10CD10CD10C0002 /* FlexibleDockLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlexibleDockLayout.swift; sourceTree = "<group>"; };
@@ -141,6 +145,7 @@
 		B04B7BB62087398C00C835D0 /* BatteryBarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BatteryBarItem.swift; sourceTree = "<group>"; };
 		B05600D22083E9BB00EB218D /* CustomSlider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSlider.swift; sourceTree = "<group>"; };
 		B059D621205E03F5006E6B86 /* TouchBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchBarController.swift; sourceTree = "<group>"; };
+		A77DA77DA77DA77DA77D0002 /* ManagedMediaInstaller.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagedMediaInstaller.swift; sourceTree = "<group>"; };
 		B059D623205E04F3006E6B86 /* CustomButtonTouchBarItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomButtonTouchBarItem.swift; sourceTree = "<group>"; };
 		B059D629205E13E5006E6B86 /* TouchBarPrivateApi.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TouchBarPrivateApi.h; sourceTree = "<group>"; };
 		B059D62A205F0E7D006E6B86 /* TouchBarPrivateApi-Bridging.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TouchBarPrivateApi-Bridging.h"; sourceTree = "<group>"; };
@@ -165,7 +170,6 @@
 		B09EB1E5207C0F8E00D5C1E0 /* MultitouchSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MultitouchSupport.framework; path = ../../../../../System/Library/PrivateFrameworks/MultitouchSupport.framework; sourceTree = "<group>"; };
 		B0A7E9A9205D6AA400EEF070 /* KeyPress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyPress.swift; sourceTree = "<group>"; };
 		B0B17427207D6B580004B740 /* PlaySmart.scpt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = PlaySmart.scpt; sourceTree = "<group>"; };
-		B0B17428207D6B580004B740 /* Weather.scpt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Weather.scpt; sourceTree = "<group>"; };
 		B0B17429207D6B580004B740 /* Finder.scpt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Finder.scpt; sourceTree = "<group>"; };
 		B0B1742A207D6B580004B740 /* Battery.scpt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Battery.scpt; sourceTree = "<group>"; };
 		B0B1742B207D6B590004B740 /* Spotify.next.scpt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = Spotify.next.scpt; sourceTree = "<group>"; };
@@ -261,6 +265,7 @@
 				BAF5AB5824317CAF00B04904 /* SwipeItem.swift */,
 				4CDC6E4F22FCA93F0069ADD4 /* ShellScriptTouchBarItem.swift */,
 				B059D621205E03F5006E6B86 /* TouchBarController.swift */,
+				A77DA77DA77DA77DA77D0002 /* ManagedMediaInstaller.swift */,
 				BAF5AB5624317B4300B04904 /* BasicView.swift */,
 				36C2ECDA207C3FE7003CDA33 /* ItemsParsing.swift */,
 				B0008E542080286C003AD4DD /* SupportHelpers.swift */,
@@ -299,7 +304,6 @@
 				B0B1742D207D6B590004B740 /* Spotify.nowPlaying.scpt */,
 				B0B1742E207D6B590004B740 /* Vox.next.scpt */,
 				B0B1742F207D6B590004B740 /* Vox.nowPlaying.scpt */,
-				B0B17428207D6B580004B740 /* Weather.scpt */,
 			);
 			path = AppleScripts;
 			sourceTree = "<group>";
@@ -328,6 +332,8 @@
 				6042B6A62083E03A00C525C8 /* AppScrubberTouchBarItem.swift */,
 				B04B7BB62087398C00C835D0 /* BatteryBarItem.swift */,
 				6027D1B72080E52A004FFDC7 /* BrightnessViewController.swift */,
+				C34EC34EC34EC34EC34E0002 /* WeatherResponse.swift */,
+				A0D10A0D10A0D10A0D100002 /* AudioOutputProbe.swift */,
 				D224D224D224D224D2240002 /* LevelReadGate.swift */,
 				D10CD10CD10CD10CD10C0002 /* FlexibleDockLayout.swift */,
 				A178A178A178A178A1780002 /* SliderEdgeObserver.swift */,
@@ -457,7 +463,6 @@
 				B0B17439207D6B590004B740 /* Vox.nowPlaying.scpt in Resources */,
 				B0B17438207D6B590004B740 /* Vox.next.scpt in Resources */,
 				36C2ECE0207CB1B0003CDA33 /* defaultPreset.json in Resources */,
-				B0B17432207D6B590004B740 /* Weather.scpt in Resources */,
 				B0B17431207D6B590004B740 /* PlaySmart.scpt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -474,13 +479,14 @@
 /* Begin PBXShellScriptBuildPhase section */
         C0DE00000000000000000003 /* Build Script Worker */ = {
             isa = PBXShellScriptBuildPhase;
+            alwaysOutOfDate = 1;
             buildActionMask = 2147483647;
             files = ();
             inputPaths = ("$(SRCROOT)/ScriptWorker/main.swift", "$(SRCROOT)/ScriptWorker/build.sh");
             outputPaths = ("$(TARGET_BUILD_DIR)/$(CONTENTS_FOLDER_PATH)/Helpers/MTMRScriptWorker");
             runOnlyForDeploymentPostprocessing = 0;
             shellPath = /bin/sh;
-            shellScript = "\"${SRCROOT}/ScriptWorker/build.sh\"";
+            shellScript = "\"${SRCROOT}/ScriptWorker/build.sh\"\n\"${SRCROOT}/MediaAssets/build.sh\"";
         };
 		B0679BBF215AE085000FC6B4 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -497,7 +503,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nbuildNumber=$(/usr/libexec/PlistBuddy -c \"Print CFBundleVersion\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\")\nbuildNumber=$(($buildNumber + 1))\n/usr/libexec/PlistBuddy -c \"Set :CFBundleVersion $buildNumber\" \"${PROJECT_DIR}/${INFOPLIST_FILE}\"\n";
+			shellScript = "# Version is set explicitly; builds must not modify source files.\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -508,6 +514,7 @@
 			files = (
                 C0DE00000000000000000001 /* WorkerSession.swift in Sources */,
 				B059D622205E03F5006E6B86 /* TouchBarController.swift in Sources */,
+				A77DA77DA77DA77DA77D0001 /* ManagedMediaInstaller.swift in Sources */,
 				B05600D32083E9BB00EB218D /* CustomSlider.swift in Sources */,
 				36C2ECD9207B74B4003CDA33 /* AppleScriptTouchBarItem.swift in Sources */,
 				BAF5AB5724317B4300B04904 /* BasicView.swift in Sources */,
@@ -545,6 +552,8 @@
 				607EEA4D2087A8DA009DA5F0 /* CurrencyBarItem.swift in Sources */,
 				4CC9FEDC22FDEA65001512EB /* AMR_ANSIEscapeHelper.m in Sources */,
 				6027D1B92080E52A004FFDC7 /* BrightnessViewController.swift in Sources */,
+				C34EC34EC34EC34EC34E0001 /* WeatherResponse.swift in Sources */,
+				A0D10A0D10A0D10A0D100001 /* AudioOutputProbe.swift in Sources */,
 				D224D224D224D224D2240001 /* LevelReadGate.swift in Sources */,
 				D10CD10CD10CD10CD10C0001 /* FlexibleDockLayout.swift in Sources */,
 				A178A178A178A178A1780001 /* SliderEdgeObserver.swift in Sources */,

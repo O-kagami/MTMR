@@ -44,6 +44,12 @@ class WeatherBarItem: CustomButtonTouchBarItem, CLLocationManagerDelegate {
 
         super.init(identifier: identifier, title: "⏳")
 
+        // Do not request location or contact the weather service without a user-supplied key.
+        guard !api_key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            title = "天気:要設定"
+            return
+        }
+
         let status = CLLocationManager.authorizationStatus()
         if status == .restricted || status == .denied {
             print("User permission not given")
@@ -74,44 +80,19 @@ class WeatherBarItem: CustomButtonTouchBarItem, CLLocationManagerDelegate {
     }
 
     @objc func updateWeather() {
-        if location != nil {
-            let urlRequest = URLRequest(url: URL(string: "https://api.openweathermap.org/data/2.5/weather?lat=\(location.coordinate.latitude)&lon=\(location.coordinate.longitude)&units=\(units)&appid=\(api_key)")!)
-
-            let task = URLSession.shared.dataTask(with: urlRequest) { data, _, error in
-
-                if error == nil {
-                    do {
-                        let json = try JSONSerialization.jsonObject(with: data!, options: .mutableContainers) as! [String: AnyObject]
-//                        print(json)
-                        var temperature: Int!
-                        var condition_icon = ""
-
-                        if let main = json["main"] as? [String: AnyObject] {
-                            if let temp = main["temp"] as? Double {
-                                temperature = Int(temp)
-                            }
-                        }
-
-                        if let weather = json["weather"] as? NSArray, let item = weather[0] as? NSDictionary {
-                            let icon = item["icon"] as! String
-                            if let test = self.iconsSource[icon] {
-                                condition_icon = test
-                            }
-                        }
-
-                        if temperature != nil {
-                            DispatchQueue.main.async {
-                                self.setWeather(text: "\(condition_icon) \(temperature!)\(self.units_str)")
-                            }
-                        }
-                    } catch let jsonError {
-                        print(jsonError.localizedDescription)
-                    }
-                }
-            }
-
-            task.resume()
+        guard let location = location,
+              let url = WeatherResponse.requestURL(latitude: location.coordinate.latitude,
+                                                   longitude: location.coordinate.longitude,
+                                                   units: units, apiKey: api_key) else { return }
+        let task = URLSession.shared.dataTask(with: URLRequest(url: url)) { [weak self] data, response, error in
+            guard error == nil,
+                  let reading = WeatherResponse.parse(statusCode: (response as? HTTPURLResponse)?.statusCode, data: data),
+                  let self = self else { return }
+            let icon = reading.icon.flatMap { self.iconsSource[$0] } ?? ""
+            let text = icon.isEmpty ? "\(reading.temperature)\(self.units_str)" : "\(icon) \(reading.temperature)\(self.units_str)"
+            DispatchQueue.main.async { [weak self] in self?.setWeather(text: text) }
         }
+        task.resume()
     }
 
     func setWeather(text: String) {
@@ -119,7 +100,7 @@ class WeatherBarItem: CustomButtonTouchBarItem, CLLocationManagerDelegate {
     }
 
     func locationManager(_: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        let lastLocation = locations.last!
+        guard let lastLocation = locations.last else { return }
         location = lastLocation
         if prev_location == nil {
             updateWeather()

@@ -389,7 +389,7 @@ enum ItemType: Decodable {
         case .weather:
             let interval = try container.decodeIfPresent(Double.self, forKey: .refreshInterval) ?? 1800.0
             let units = try container.decodeIfPresent(String.self, forKey: .units) ?? "metric"
-            let api_key = try container.decodeIfPresent(String.self, forKey: .api_key) ?? "32c4256d09a4c52b38aecddba7a078f6"
+            let api_key = try container.decodeIfPresent(String.self, forKey: .api_key) ?? ""
             let icon_type = try container.decodeIfPresent(String.self, forKey: .icon_type) ?? "text"
             self = .weather(interval: interval, units: units, api_key: api_key, icon_type: icon_type)
             

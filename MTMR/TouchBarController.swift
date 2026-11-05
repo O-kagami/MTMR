@@ -7,6 +7,7 @@
 //
 
 import Cocoa
+import CoreAudio
 
 struct ExactItem {
     let identifier: NSTouchBarItem.Identifier
@@ -604,7 +605,7 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
         }
         volume.onHardwareValue = { [weak self] value in
             guard let self = self, self.isVolume else { return }
-            self.showLevel(value)
+            self.showLevel(self.lastVolumeAvailable == true ? value : nil)
         }
         brightness.sliderItem.addGestureRecognizer(SliderEdgeObserver(slider: brightness.sliderItem))
         volume.sliderItem.addGestureRecognizer(SliderEdgeObserver(slider: volume.sliderItem))
@@ -656,7 +657,7 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
         // the asynchronous device check/read will refresh it when it returns.
         let level: Int?
         if isVolume {
-            level = lastVolumeAvailable == false ? nil : Int(volume.sliderItem.floatValue.rounded())
+            level = lastVolumeAvailable == true ? Int(volume.sliderItem.floatValue.rounded()) : nil
         } else {
             level = brightness.sliderItem.isEnabled ? Int(brightness.sliderItem.floatValue.rounded()) : nil
         }
@@ -687,28 +688,33 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
             guard !checkingVolume else { return }
             checkingVolume = true
             DispatchQueue.global(qos: .utility).async { [weak self] in
-                let task = Process()
-                task.executableURL = URL(fileURLWithPath: appSupportDirectory + "/LevelControl/volume-capability/check")
-                let pipe = Pipe(); task.standardOutput = pipe; task.standardError = Pipe()
-                var status = "unknown"
-                if (try? task.run()) != nil {
-                    let bytes = pipe.fileHandleForReading.readDataToEndOfFile(); task.waitUntilExit()
-                    if task.terminationStatus == 0, let result = String(data: bytes, encoding: .utf8) { status = result.trimmingCharacters(in: .whitespacesAndNewlines) }
+                let reading = OutputVolumeProbe.current()
+                // A route can change while CoreAudio is being queried. Treat a
+                // stale or failed second device lookup as unknown until retry.
+                let (deviceStatus, latestDevice) = OutputVolumeProbe.currentDevice()
+                let stable: Bool
+                if let device = reading.device {
+                    stable = deviceStatus == noErr && device == latestDevice
+                } else {
+                    stable = deviceStatus == noErr && latestDevice == AudioObjectID(kAudioObjectUnknown)
                 }
                 DispatchQueue.main.async { [weak self] in
                     guard let self = self else { return }
                     self.checkingVolume = false
-                    if status == "available" {
+                    let capability: OutputVolumeCapability = stable ? reading.capability : .unknown
+                    switch capability {
+                    case .available:
                         self.lastVolumeAvailable = true
                         self.volume.sliderItem.isEnabled = true
-                    } else if status == "unavailable" {
+                    case .unavailable:
                         self.lastVolumeAvailable = false
+                        self.volume.sliderItem.isEnabled = false
+                    case .unknown:
+                        self.lastVolumeAvailable = nil
                         self.volume.sliderItem.isEnabled = false
                     }
                     if self.isVolume {
-                        let level = self.volume.sliderItem.isEnabled ? Int(self.volume.sliderItem.floatValue) : nil
-                        self.label.stringValue = level.map { "\($0)%" } ?? "--"
-                        self.updateIcon(level: level)
+                        self.showLevel(self.volume.sliderItem.isEnabled ? self.volume.sliderItem.floatValue : nil)
                     }
                 }
             }
@@ -718,24 +724,17 @@ private final class LocalLevelTouchBarItem: NSCustomTouchBarItem {
         loadingBrightness = true
         let issuedGeneration = brightnessReadGate.generation
         let issuedAt = ProcessInfo.processInfo.systemUptime
+        let brightness = self.brightness
         DispatchQueue.global(qos: .utility).async { [weak self] in
-            let task = Process()
-            task.executableURL = URL(fileURLWithPath: appSupportDirectory + "/LevelControl/read-brightness")
-            let pipe = Pipe(); task.standardOutput = pipe; task.standardError = Pipe()
-            var value = "--"
-            if (try? task.run()) != nil {
-                let bytes = pipe.fileHandleForReading.readDataToEndOfFile(); task.waitUntilExit()
-                if task.terminationStatus == 0, let result = String(data: bytes, encoding: .utf8) { value = result.trimmingCharacters(in: .whitespacesAndNewlines) }
-            }
+            let value = brightness.currentBrightnessPercent()
             DispatchQueue.main.async { [weak self] in
                 guard let self = self else { return }
                 self.loadingBrightness = false
                 if !self.isVolume && self.brightnessReadGate.allows(issuedGeneration, issuedAt: issuedAt, completedAt: ProcessInfo.processInfo.systemUptime) {
-                    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-                    let number = trimmed.hasSuffix("%") ? String(trimmed.dropLast()) : ""
-                    self.showLevel(Float(number))
+                    self.showLevel(value)
                 }
             }
         }
     }
+
 }

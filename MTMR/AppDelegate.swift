@@ -17,10 +17,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var fileSystemSource: DispatchSourceFileSystemObject?
 
     func applicationDidFinishLaunching(_: Notification) {
-        // This experimental build is customized. Keep manual upstream checks
-        // available, but do not automatically replace it with upstream releases.
-        SUUpdater.shared().automaticallyDownloadsUpdates = false
-        SUUpdater.shared().automaticallyChecksForUpdates = false
+        // This fork has no signed update feed configured.
+
+        // Provision bundled media before a first-run preset is loaded. Existing
+        // presets and mutable history remain untouched.
+        do {
+            guard let resources = Bundle.main.resourceURL, let ownerID = Bundle.main.bundleIdentifier,
+                  let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            else { throw ManagedMediaInstaller.Error.invalidOwner }
+            let helpers = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers", isDirectory: true)
+            try ManagedMediaInstaller.install(resources: resources, helpers: helpers, support: support, ownerID: ownerID)
+        } catch {
+            NSLog("Managed media setup failed: %@", String(describing: error))
+        }
 
         AXIsProcessTrustedWithOptions([kAXTrustedCheckOptionPrompt.takeRetainedValue() as NSString: true] as NSDictionary)
 
@@ -47,6 +56,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             isBlockedApp = false
         }
         createMenu()
+    }
+
+    @objc func openForkReleases(_: Any?) {
+        guard let url = URL(string: "https://github.com/O-kagami/MTMR/releases") else { return }
+        NSWorkspace.shared.open(url)
     }
 
     @objc func openPreferences(_: Any?) {
@@ -134,7 +148,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(withTitle: "Preferences", action: #selector(openPreferences(_:)), keyEquivalent: ",")
         menu.addItem(withTitle: "Open preset", action: #selector(openPreset(_:)), keyEquivalent: "O")
-        menu.addItem(withTitle: "Check Upstream Updates (may replace custom build)...", action: #selector(SUUpdater.checkForUpdates(_:)), keyEquivalent: "").target = SUUpdater.shared()
+        menu.addItem(withTitle: "Check for Updates…", action: #selector(openForkReleases(_:)), keyEquivalent: "")
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(settingSeparator)

@@ -1,4 +1,15 @@
-# My touchbar. My rules. [![GitHub release](https://img.shields.io/github/release/toxblh/MTMR.svg)](https://github.com/Toxblh/MTMR/releases) [![license](https://img.shields.io/github/license/Toxblh/MTMR.svg)](https://github.com/Toxblh/MTMR/blob/master/LICENSE) ![minimal system requirements](https://img.shields.io/badge/required-macOS%2010.12.2-blue.svg) ![travis](https://travis-ci.org/Toxblh/MTMR.svg?branch=master)
+# MTMR
+
+## このフォークの配布状況
+
+Apple Silicon / Intel 両対応のローカル試験版を準備中です。現時点でDeveloper IDによる署名とAppleの公証は完了しておらず、正式な配布版ではありません。独自の自動更新も未設定です。
+
+初回用の設定には天気、Spotify、CPU/メモリ、Dock、明るさ/音量を含みます。天気はキー未設定の間「天気:要設定」と表示され、利用するには設定の天気項目にご自身のOpenWeather APIキーを追加してください。既存の `items.json` は自動で上書きしません。
+
+**macOS通知のプレビュー表示は未実装です。** 本フォークの動作、Touch Barでの表示、権限や外部音声機器との互換性は、配布前に実機での確認が必要です。
+
+以下は[上流MTMR](https://github.com/Toxblh/MTMR)の説明です。上流のインストール手順や配布物は、このフォークとは別です。
+
 
 <img src="Resources/logo.png" align="right"
      title="MTMR by Toxblh" width="110" height="110">
