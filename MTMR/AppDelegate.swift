@@ -14,6 +14,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
     var isBlockedApp: Bool = false
 
+    private let touchBarBrightnessMenu = TouchBarBrightnessMenu()
     private var fileSystemSource: DispatchSourceFileSystemObject?
 
     func applicationDidFinishLaunching(_: Notification) {
@@ -47,7 +48,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.notificationCenter.addObserver(self, selector: #selector(updateIsBlockedApp), name: NSWorkspace.didActivateApplicationNotification, object: nil)
     }
 
-    func applicationWillTerminate(_: Notification) {}
+    func applicationWillTerminate(_: Notification) { touchBarBrightnessMenu.stop() }
 
     @objc func updateIsBlockedApp() {
         if let frontmostAppId = TouchBarController.shared.frontmostApplicationIdentifier {
@@ -152,6 +153,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(NSMenuItem.separator())
         menu.addItem(settingSeparator)
+        menu.addItem(touchBarBrightnessMenu.makeItem())
         menu.addItem(hapticFeedback)
         menu.addItem(hideControlStrip)
         menu.addItem(toggleBlackList)

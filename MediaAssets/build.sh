@@ -1,6 +1,10 @@
 #!/bin/sh
 # Xcode build phase. Artifacts are bundled; no user files are touched.
 set -eu
+# This fork supports Apple Silicon only; fail rather than silently ship Intel code.
+for arch in ${ARCHS:-}; do
+  [ "$arch" = arm64 ] || { printf 'Only arm64 is supported (got %s)\n' "$arch" >&2; exit 1; }
+done
 : "${TARGET_BUILD_DIR:?}" "${CONTENTS_FOLDER_PATH:?}" "${DERIVED_FILE_DIR:?}" "${ARCHS:?}"
 root="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 resources="${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Resources/ManagedMedia/v1"

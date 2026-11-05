@@ -24,15 +24,18 @@ scratch="$(mktemp -d "${TMPDIR:-/tmp}/mtmr-package.XXXXXXXX")"
 trap 'rm -rf "$scratch"' EXIT
 mkdir -p "$scratch/stage"
 xcodebuild -project "$root/MTMR.xcodeproj" -scheme MTMR -configuration Release \
-  -derivedDataPath "$scratch/build" ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
+  -derivedDataPath "$scratch/build" ARCHS="arm64" ONLY_ACTIVE_ARCH=NO \
   CODE_SIGNING_ALLOWED=NO MACOSX_DEPLOYMENT_TARGET=12.0 PRODUCT_BUNDLE_IDENTIFIER="$bundle_id" build >"$scratch/build.log" 2>&1 || {
     tail -n 60 "$scratch/build.log" >&2
     exit 1
   }
 app="$scratch/stage/MTMR.app"
 ditto "$scratch/build/Build/Products/Release/MTMR.app" "$app"
+# Thin the staged copy, including nested Sparkle executables, before signing.
+"$root/scripts/thin-sparkle-arm64.sh" "$app/Contents/Frameworks/Sparkle.framework" "$scratch"
 # Remove debug-map paths from the distributed executable before signing.
 /usr/bin/strip -S "$app/Contents/MacOS/MTMR"
+/usr/bin/strip -S "$app/Contents/MacOS/TouchBarBrightnessHelper"
 # Reject an accidentally embedded local home path instead of packaging it.
 if [[ -n "${HOME:-}" && "$HOME" != / ]]; then
   while IFS= read -r -d '' file; do
@@ -42,21 +45,30 @@ if [[ -n "${HOME:-}" && "$HOME" != / ]]; then
     fi
   done < <(find "$app/Contents" -type f -print0)
 fi
+brightness="$app/Contents/MacOS/TouchBarBrightnessHelper"
 worker="$app/Contents/Helpers/MTMRScriptWorker"
 graph="$app/Contents/Helpers/graph"
 artwork="$app/Contents/Helpers/artwork-worker"
-for file in "$app/Contents/MacOS/MTMR" "$worker" "$graph" "$artwork" "$app/Contents/Frameworks/Sparkle.framework/Sparkle"; do
+for file in "$app/Contents/MacOS/MTMR" "$brightness" "$worker" "$graph" "$artwork" "$app/Contents/Frameworks/Sparkle.framework/Sparkle"; do
   [[ -f "$file" ]] || { printf 'Missing required executable: %s\n' "$file" >&2; exit 1; }
   xcrun lipo "$file" -verify_arch arm64
-  xcrun lipo "$file" -verify_arch x86_64
+  [[ "$(xcrun lipo -archs "$file")" == arm64 ]] || { printf 'Unexpected non-ARM architecture: %s\n' "$file" >&2; exit 1; }
 done
+# Verify the Sparkle nested executables as well as the framework itself.
+while IFS= read -r -d '' file; do
+  if archs=$(xcrun lipo -archs "$file" 2>/dev/null); then
+    [[ "$archs" == arm64 ]] || { printf 'Unexpected Sparkle architecture: %s\n' "$file" >&2; exit 1; }
+  fi
+done < <(find "$app/Contents/Frameworks/Sparkle.framework/Versions" -type f -print0)
 # Ad-hoc signing provides integrity for this local test only. It is not Developer ID.
-for helper in "$worker" "$graph" "$artwork"; do codesign --force --sign - "$helper"; done
+for helper in "$brightness" "$worker" "$graph" "$artwork"; do codesign --force --sign - "$helper"; done
 codesign --force --deep --sign - "$app"
 codesign --verify --deep --strict "$app"
-for helper in "$worker" "$graph" "$artwork"; do codesign --verify --strict "$helper"; done
+for helper in "$brightness" "$worker" "$graph" "$artwork"; do codesign --verify --strict "$helper"; done
 cat > "$scratch/stage/README-UNNOTARIZED.txt" <<'NOTE'
 LOCAL TEST BUILD — NOT A RELEASE
+
+Apple Silicon (arm64) only. Intel Macs are not supported.
 
 This build uses an ad-hoc signature. It has not been signed with Developer ID
 or notarized by Apple and is not a verified public distribution. macOS can

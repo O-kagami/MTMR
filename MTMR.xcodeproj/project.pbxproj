@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CA9090909090909090900001 /* IsolatedTouchBarClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA9090909090909090900011 /* IsolatedTouchBarClient.swift */; };
+		CA9090909090909090900002 /* TouchBarBrightnessMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA9090909090909090900012 /* TouchBarBrightnessMenu.swift */; };
+
 		C34EC34EC34EC34EC34E0001 /* WeatherResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = C34EC34EC34EC34EC34E0002 /* WeatherResponse.swift */; };
 		A0D10A0D10A0D10A0D100001 /* AudioOutputProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0D10A0D10A0D10A0D100002 /* AudioOutputProbe.swift */; };
 		D224D224D224D224D2240001 /* LevelReadGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D224D224D224D224D2240002 /* LevelReadGate.swift */; };
@@ -98,6 +101,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CA9090909090909090900011 /* IsolatedTouchBarClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IsolatedTouchBarClient.swift; sourceTree = "<group>"; };
+		CA9090909090909090900012 /* TouchBarBrightnessMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TouchBarBrightnessMenu.swift; sourceTree = "<group>"; };
+
 		C34EC34EC34EC34EC34E0002 /* WeatherResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeatherResponse.swift; sourceTree = "<group>"; };
 		A0D10A0D10A0D10A0D100002 /* AudioOutputProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioOutputProbe.swift; sourceTree = "<group>"; };
 		D224D224D224D224D2240002 /* LevelReadGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LevelReadGate.swift; sourceTree = "<group>"; };
@@ -338,6 +344,8 @@
 				D10CD10CD10CD10CD10C0002 /* FlexibleDockLayout.swift */,
 				A178A178A178A178A1780002 /* SliderEdgeObserver.swift */,
 				E217E217E217E217E2170002 /* BrightnessWriter.swift */,
+				CA9090909090909090900011 /* IsolatedTouchBarClient.swift */,
+				CA9090909090909090900012 /* TouchBarBrightnessMenu.swift */,
 				A174A174A174A174A1740002 /* TouchBarMotion.swift */,
 				4CF222EA26CC00470025BDA7 /* CPUBarItem.swift */,
 				607EEA4C2087A8DA009DA5F0 /* CurrencyBarItem.swift */,
@@ -372,6 +380,7 @@
 				B082B24D205C7D8000BC04DC /* Resources */,
 				B00D181E2152F507000806F4 /* CopyFiles */,
 				B0679BBF215AE085000FC6B4 /* ShellScript */,
+				CA9090909090909090900099 /* Build Touch Bar helper */,
 			);
 			buildRules = (
 			);
@@ -477,6 +486,17 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		CA9090909090909090900099 /* Build Touch Bar helper */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			inputPaths = ("$(SRCROOT)/TouchBarHelper/build.sh", "$(SRCROOT)/TouchBarHelper/main.swift", "$(SRCROOT)/TouchBarHelper/ParentWatcher.swift", "$(SRCROOT)/TouchBarHelper/TouchBarBrightnessSession.swift", "$(SRCROOT)/TouchBarHelper/TouchBarBrightnessDevice.swift");
+			name = "Build Touch Bar helper";
+			outputPaths = ("$(BUILT_PRODUCTS_DIR)/$(CONTENTS_FOLDER_PATH)/MacOS/TouchBarBrightnessHelper");
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/TouchBarHelper/build.sh\"\n";
+		};
         C0DE00000000000000000003 /* Build Script Worker */ = {
             isa = PBXShellScriptBuildPhase;
             alwaysOutOfDate = 1;
@@ -558,6 +578,8 @@
 				D10CD10CD10CD10CD10C0001 /* FlexibleDockLayout.swift in Sources */,
 				A178A178A178A178A1780001 /* SliderEdgeObserver.swift in Sources */,
 				E217E217E217E217E2170001 /* BrightnessWriter.swift in Sources */,
+				CA9090909090909090900001 /* IsolatedTouchBarClient.swift in Sources */,
+				CA9090909090909090900002 /* TouchBarBrightnessMenu.swift in Sources */,
 				A174A174A174A174A1740001 /* TouchBarMotion.swift in Sources */,
 				368EDDE720812A1D00E10953 /* ScrollViewItem.swift in Sources */,
 				B04B7BB72087398C00C835D0 /* BatteryBarItem.swift in Sources */,
@@ -594,7 +616,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "arm64 x86_64";
+				ARCHS = arm64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -653,7 +675,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				ARCHS = "arm64 x86_64";
+				ARCHS = arm64;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";

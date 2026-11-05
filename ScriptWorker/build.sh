@@ -1,5 +1,9 @@
 #!/bin/sh
 set -eu
+# This fork supports Apple Silicon only; fail rather than silently ship Intel code.
+for arch in ${ARCHS:-}; do
+  [ "$arch" = arm64 ] || { printf 'Only arm64 is supported (got %s)\n' "$arch" >&2; exit 1; }
+done
 out="${TARGET_BUILD_DIR}/${CONTENTS_FOLDER_PATH}/Helpers/MTMRScriptWorker"
 mkdir -p "$(dirname "$out")" "${DERIVED_FILE_DIR}/mtmr-workers"
 set --

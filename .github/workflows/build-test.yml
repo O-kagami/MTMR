@@ -18,8 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build (universal binary)
-        run: xcodebuild archive -project "MTMR.xcodeproj" -scheme "MTMR" -archivePath Release/App.xcarchive DEVELOPMENT_TEAM="" CODE_SIGN_IDENTITY="" ARCHS="arm64 x86_64" | xcpretty -c && exit ${PIPESTATUS[0]}
+      - name: Build (Apple Silicon binary)
+        run: xcodebuild archive -project "MTMR.xcodeproj" -scheme "MTMR" -archivePath Release/App.xcarchive DEVELOPMENT_TEAM="" CODE_SIGN_IDENTITY="" ARCHS="arm64" | xcpretty -c && exit ${PIPESTATUS[0]}
 
-      - name: Verify universal binary
-        run: lipo -info Release/App.xcarchive/Products/Applications/MTMR.app/Contents/MacOS/MTMR
+      - name: Verify Apple Silicon binary
+        run: test "$(lipo -archs Release/App.xcarchive/Products/Applications/MTMR.app/Contents/MacOS/MTMR)" = arm64
