@@ -41,6 +41,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.image = #imageLiteral(resourceName: "StatusImage")
         }
         createMenu()
+        touchBarBrightnessMenu.startMonitoringDisplay()
 
         reloadOnDefaultConfigChanged()
 
