@@ -11,10 +11,16 @@ class BrightnessViewController: NSCustomTouchBarItem {
     var onUserValue: ((Float?) -> Void)?
     private var lastDragTime: TimeInterval = -.infinity
     private var writeFailed = false
+    private var wakeGuard = BrightnessWakeGuard()
     private let displayServices = dlopen("/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices", RTLD_LAZY)
 
     init(identifier: NSTouchBarItem.Identifier, refreshInterval: Double, image: NSImage? = nil) {
         super.init(identifier: identifier)
+        let notifications = NSWorkspace.shared.notificationCenter
+        notifications.addObserver(self, selector: #selector(systemWillSleep), name: NSWorkspace.willSleepNotification, object: nil)
+        notifications.addObserver(self, selector: #selector(systemDidWake), name: NSWorkspace.didWakeNotification, object: nil)
+        notifications.addObserver(self, selector: #selector(displayDidSleep), name: NSWorkspace.screensDidSleepNotification, object: nil)
+        notifications.addObserver(self, selector: #selector(displayDidWake), name: NSWorkspace.screensDidWakeNotification, object: nil)
         sliderItem = image.map { CustomSlider(knob: $0) } ?? CustomSlider()
         sliderItem.target = self
         sliderItem.action = #selector(sliderValueChanged(_:))
@@ -30,7 +36,12 @@ class BrightnessViewController: NSCustomTouchBarItem {
         RunLoop.main.add(timer, forMode: .common)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
-    deinit { refreshTimer?.invalidate() }
+    deinit { refreshTimer?.invalidate(); NSWorkspace.shared.notificationCenter.removeObserver(self) }
+
+    @objc private func systemWillSleep() { wakeGuard.systemWillSleep() }
+    @objc private func systemDidWake() { wakeGuard.systemDidWake(at: ProcessInfo.processInfo.systemUptime) }
+    @objc private func displayDidSleep() { wakeGuard.displayDidSleep() }
+    @objc private func displayDidWake() { wakeGuard.displayDidWake(at: ProcessInfo.processInfo.systemUptime) }
 
     func cancelAdjustment() {
         lastDragTime = -.infinity
@@ -47,6 +58,11 @@ class BrightnessViewController: NSCustomTouchBarItem {
 
     @objc func sliderValueChanged(_ sender: Any) {
         guard let slider = sender as? NSSlider else { return }
+        guard wakeGuard.allowsWrite(at: ProcessInfo.processInfo.systemUptime) else {
+            NSLog("MTMR display brightness action ignored during sleep or wake")
+            updateBrightnessSlider()
+            return
+        }
         lastDragTime = ProcessInfo.processInfo.systemUptime
         onUserInteraction?()
         let requested = slider.floatValue / 100

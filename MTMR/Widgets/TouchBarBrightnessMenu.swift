@@ -41,6 +41,7 @@ final class TouchBarBrightnessMenu: NSObject, NSMenuDelegate {
     private var lastDisplayBrightness: Double?
     private var queuedSync: Double?
     private var stopped = false
+    private var wakeGuard = BrightnessWakeGuard()
 
     override init() {
         let url = Bundle.main.executableURL?.deletingLastPathComponent().appendingPathComponent("TouchBarBrightnessHelper")
@@ -55,14 +56,25 @@ final class TouchBarBrightnessMenu: NSObject, NSMenuDelegate {
 
     func startMonitoringDisplay() {
         guard displayTimer == nil, !stopped else { return }
+        let notifications = NSWorkspace.shared.notificationCenter
+        notifications.addObserver(self, selector: #selector(systemWillSleep), name: NSWorkspace.willSleepNotification, object: nil)
+        notifications.addObserver(self, selector: #selector(systemDidWake), name: NSWorkspace.didWakeNotification, object: nil)
+        notifications.addObserver(self, selector: #selector(displayDidSleep), name: NSWorkspace.screensDidSleepNotification, object: nil)
+        notifications.addObserver(self, selector: #selector(displayDidWake), name: NSWorkspace.screensDidWakeNotification, object: nil)
         let timer = Timer(timeInterval: 1.0, repeats: true) { [weak self] _ in self?.readDisplay() }
         displayTimer = timer
         RunLoop.main.add(timer, forMode: .common)
         readDisplay()
     }
 
+    @objc private func systemWillSleep() { wakeGuard.systemWillSleep(); suspendSyncForSleep() }
+    @objc private func displayDidSleep() { wakeGuard.displayDidSleep(); suspendSyncForSleep() }
+    @objc private func systemDidWake() { wakeGuard.systemDidWake(at: ProcessInfo.processInfo.systemUptime) }
+    @objc private func displayDidWake() { wakeGuard.displayDidWake(at: ProcessInfo.processInfo.systemUptime) }
+    private func suspendSyncForSleep() { displayGeneration &+= 1; queuedSync = nil }
+
     private func readDisplay() {
-        guard !blocked, !stopped else { return }
+        guard !blocked, !stopped, wakeGuard.allowsWrite(at: ProcessInfo.processInfo.systemUptime) else { return }
         flushSync()
         guard !displayReadPending else { return }
         displayReadPending = true
@@ -82,7 +94,7 @@ final class TouchBarBrightnessMenu: NSObject, NSMenuDelegate {
     /// The first successful observation establishes a baseline only. A manual
     /// Touch Bar adjustment remains in effect until the display actually changes.
     func observeDisplayBrightness(_ value: Double) {
-        guard !stopped, !blocked, value.isFinite, (0...1).contains(value) else { return }
+        guard !stopped, !blocked, wakeGuard.allowsWrite(at: ProcessInfo.processInfo.systemUptime), value.isFinite, (0...1).contains(value) else { return }
         guard let previous = lastDisplayBrightness else { lastDisplayBrightness = value; return }
         guard abs(value - previous) >= 0.005 else { return }
         lastDisplayBrightness = value
@@ -91,13 +103,19 @@ final class TouchBarBrightnessMenu: NSObject, NSMenuDelegate {
     }
 
     private func flushSync() {
-        guard !pending, !blocked, !stopped, let value = queuedSync else { return }
+        guard !pending, !blocked, !stopped, wakeGuard.allowsWrite(at: ProcessInfo.processInfo.systemUptime), let value = queuedSync else { return }
         queuedSync = nil
         pending = true
+        let generation = displayGeneration
         updateControls()
         client.request(["set", String(value), String(getpid())]) { [weak self] result in
             guard let self = self, !self.stopped else { return }
             self.pending = false
+            if generation != self.displayGeneration {
+                if case .indeterminate = result { self.blocked = true; self.available = false }
+                self.updateControls()
+                return
+            }
             switch result {
             case .success:
                 self.requestedTemporary = false
@@ -204,5 +222,5 @@ final class TouchBarBrightnessMenu: NSObject, NSMenuDelegate {
             self.flushSync()
         }
     }
-    func stop() { stopped = true; displayTimer?.invalidate(); displayTimer = nil; queuedSync = nil; client.stop() }
+    func stop() { stopped = true; displayTimer?.invalidate(); displayTimer = nil; queuedSync = nil; NSWorkspace.shared.notificationCenter.removeObserver(self); client.stop() }
 }
